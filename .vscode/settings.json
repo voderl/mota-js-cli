@@ -1,0 +1,4 @@
+{
+  "eslint.enable": true,
+  "typescript.disableAutomaticTypeAcquisition": true
+}
