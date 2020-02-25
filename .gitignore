@@ -1,4 +1,4 @@
 node_modules
-/.vscode
-/mota-js/.git
-/mota-js/.gitignore
+.vscode
+mota-js/.git
+mota-js/.gitignore
