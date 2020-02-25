@@ -1,0 +1,3 @@
+[submodule "DbConnector"]
+	path = mota-js
+	url = git@github.com:voderl/mota-js.git
