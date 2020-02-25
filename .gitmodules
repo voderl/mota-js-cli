@@ -1,0 +1,3 @@
+[submodule "mota-js"]
+	path = mota-js
+	url = https://github.com/voderl/mota-js.git
