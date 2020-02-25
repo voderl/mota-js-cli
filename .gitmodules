@@ -1,3 +1,3 @@
-[submodule "mota-js"]
-	path = mota-js
-	url = https://github.com/voderl/mota-js
+[submodule "mota-js-cli"]
+	path = mota-js-cli
+	url = git@github.com:voderl/mota-js-cli.git
