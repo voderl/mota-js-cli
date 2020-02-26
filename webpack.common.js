@@ -4,7 +4,7 @@ const path = require('path');
 
 module.exports = {
   entry: {
-    index: './mota/load.js',
+    index: './mota-js/main.js',
   },
   optimization: {
     splitChunks: {
@@ -20,7 +20,7 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       filename: 'index.html',
-      template: path.resolve(__dirname, 'mota', 'index.html'),
+      template: path.resolve(__dirname, 'mota-js', 'index.html'),
       chunks: ['vendors', 'index'],
     }),
     // new HtmlWebpackPlugin({

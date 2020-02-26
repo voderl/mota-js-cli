@@ -14,6 +14,8 @@ const dir = {
 };
 // 在libs文件前面加入export default
 fs.readdir(dir.libs, (error, files) => {
+  console.log(files);
+  if (files === undefined) return;
   files.forEach((file) => {
     if (path.extname(file) === '.js') {
       // fs.appendFile(path.join(dir.libs,file),`\nexport default ${path.basename(file)};`,(err)=>{
@@ -32,15 +34,27 @@ fs.readdir(dir.libs, (error, files) => {
 });
 
 fs.readdir(dir.project, (error, files) => {
+  console.log(files);
+  if (files === undefined) return;
   files.forEach((file) => {
     if (path.extname(file) === '.js') {
       fs.readFile(path.join(dir.project, file), 'utf8', (err, data) => {
         if (err) throw err;
-        if (data.startsWith('export')) return;
-        const start = 'export default';
-        fs.writeFile(path.join(dir.project, file), start + data.slice(3), (_err) => {
-          if (_err) throw _err;
-        });
+        const index = data.indexOf('=');
+        const str = data.slice(0, index);
+        let name = '';
+        const start = 'export var ';
+        if (!str.startsWith('var')) {
+          if (str.startsWith('export default')) {
+            name = str.slice(15);
+          } else if (str.startsWith('var')) name = str.slice(4);
+        }
+        const end = '';
+        console.log(name);
+        fs.writeFile(path.join(dir.project, file), start + name + data.slice(index) + end,
+          (_err) => {
+            if (_err) throw _err;
+          });
       });
     }
   });
