@@ -1,6 +1,4 @@
 import * as $ from 'pixi.js';
-import data from '../nodeControl/data/packer.json';
-import image from '../nodeControl/data/packer.png';
 
 window.$ = $;
 const app = new $.Application({
@@ -14,7 +12,7 @@ window.app = app;
 document.body.appendChild(app.view);
 const textures = {};
 window.textures = textures;
-const _packer = require.context('./../nodeControl/data/', false, /^.\/packer.*\./);
+const _packer = require.context('./../nodeControl/data/', false, /(png|json|jpg|ico|gif|svg)$/);
 const loadPacker = (packer) => {
   const list = { };
   packer.keys().forEach((name) => {
@@ -23,21 +21,28 @@ const loadPacker = (packer) => {
     const [id, ext] = fullName.split('.');
     if (!list[id]) list[id] = {};
     const item = list[id];
-    if (ext.toLowerCase() === 'png') item.image = packer(name).default;
+    if (['png', 'jpg', 'ico', 'gif'].includes(ext.toLowerCase())) item.image = packer(name).default;
     else if (ext.toLowerCase() === 'json') item.data = packer(name);
   });
   const loader = new $.Loader();
   const { Spritesheet } = $;
-  Object.values(list).forEach((item) => {
+  Object.keys(list).forEach((id) => {
+    const item = list[id];
     loader.add(item.image, (resource) => {
-      const { texture } = resource;
-      const sheet = new Spritesheet(texture.baseTexture, item.data);
+      const { texture: { baseTexture } } = resource;
+      if (!item.data) {
+        textures[id] = baseTexture;
+        return;
+      }
+      const sheet = new Spritesheet(baseTexture, item.data);
       sheet.parse((_textures) => {
         Object.assign(textures, _textures);
       });
     });
   });
   loader.load();
+  loader.onProgress.add((loader) => {console.log(loader.progress)});
+  return loader;
 };
 loadPacker(_packer);
 

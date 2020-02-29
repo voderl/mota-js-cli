@@ -8,7 +8,7 @@
   "private": true,
   "scripts": {
     "help": "webpack --help",
-    "watch": "webpack --config webpack.node.js --watch",
+    "watch": "webpack --config \"./nodeControl/webpack.node.js\" --watch",
     "start": "webpack-dev-server --config webpack.dev.js",
     "server": "node server.js",
     "build": "webpack --config webpack.prod.js",

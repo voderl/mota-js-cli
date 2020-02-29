@@ -4,7 +4,9 @@ const path = require('path');
 const materials = [
   'animates',
   'enemys',
-  'hero', 'items', 'npcs', 'terrains', 'enemy48', 'npc48', 'airwall',
+  'hero', 'items', 'npcs', 'terrains', 'enemy48', 'npc48',
+  'airwall',
+  'icons',
 ];
 const imagesDir = path.resolve('../mota-js/project/images');
 const readImage = (rootDir, arr) => {
@@ -24,9 +26,11 @@ const readImage = (rootDir, arr) => {
 async function loadImages() {
   const { main } = global;
   const _root = main.images;
+  main.imagesDir = imagesDir;
   console.log(_root);
   await readImage(_root, materials);
   await readImage(_root.autotile, main.autotiles);
   await readImage(_root.tilesets, main.tilesets);
+  await readImage(_root.extraImages, main.rawImages);
 }
 export default loadImages;

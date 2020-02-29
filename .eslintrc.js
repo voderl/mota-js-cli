@@ -22,5 +22,8 @@ module.exports = {
     'no-param-reassign': ["error", { "props": false }],
     'arrow-body-style' : 1,
     'no-unused-vars': 1,
+    'no-plusplus': ["error", { "allowForLoopAfterthoughts": true }],
+    'no-shadow': 1,
+    'no-param-reassign': 1,
   },
 };

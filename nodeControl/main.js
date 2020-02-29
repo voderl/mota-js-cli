@@ -1,3 +1,4 @@
+// https://github.com/oliver-moran/jimp
 import Jimp from 'jimp';
 
 import { icons_4665ee12_3a1f_44a4_bea3_0fccba634dc1 as icons } from '../mota-js/project/icons';
@@ -6,6 +7,7 @@ import { data_a1e2fb4a_e986_4524_b0da_9b7ba7c0874d as data } from '../mota-js/pr
 
 const fs = require('fs');
 const path = require('path');
+// 打包工具 https://github.com/odrick/free-tex-packer-core
 const texturePacker = require('free-tex-packer-core');
 
 const main = { floors: { } };
@@ -13,12 +15,55 @@ global.main = main;
 global.window = {};
 main.tilesets = data.main.tilesets;
 main.autotiles = Object.keys(icons.autotile);
+main.icons = {
+  floor: 0,
+  lv: 1,
+  hpmax: 2,
+  hp: 3,
+  atk: 4,
+  def: 5,
+  mdef: 6,
+  money: 7,
+  experience: 8,
+  up: 9,
+  book: 10,
+  fly: 11,
+  toolbox: 12,
+  keyboard: 13,
+  shop: 14,
+  save: 15,
+  load: 16,
+  settings: 17,
+  play: 18,
+  pause: 19,
+  stop: 20,
+  speedDown: 21,
+  speedUp: 22,
+  rewind: 23,
+  equipbox: 24,
+  mana: 25,
+  skill: 26,
+  paint: 27,
+  erase: 28,
+  empty: 29,
+  exit: 30,
+  btn1: 31,
+  btn2: 32,
+  btn3: 33,
+  btn4: 34,
+  btn5: 35,
+  btn6: 36,
+  btn7: 37,
+  btn8: 38,
+};
 main.images = {
   tilesets: {},
   autotile: {},
+  extraImages: {},
 };
 const floors = require.context('../mota-js/project/floors/', false, /\.js$/);
-const { floorIds } = data.main;
+const { floorIds, images: rawImages } = data.main;
+main.rawImages = rawImages;
 const blockIds = {};
 // 加载出地图数组中所使用的block 的num
 (function loadFloors() {
@@ -119,7 +164,9 @@ const loadImages = require('./loadImages').default;
 loadImages().then(() => {
   console.log('资源加载完成');
   const blocksBuffer = {};
-  Object.keys(blockIds).forEach((num) => {
+  // 加载blocks
+  Object.keys(blockIds).forEach((numId) => {
+    const num = parseInt(numId, 10);
     const block = getBlock(num);
     if (!block) return;
     const {
@@ -127,23 +174,68 @@ loadImages().then(() => {
     } = block;
     if (!image) return;
     if (alone) {
-      image.getBuffer(Jimp.MIME_PNG, (err, data) => {
+      image.getBuffer(Jimp.MIME_PNG, (err, imageBuffer) => {
         if (err) throw err;
-        blocksBuffer[id] = data;
+        blocksBuffer[id] = imageBuffer;
       });
       return;
     }
-    blocksBuffer[id] = new Jimp(32 * animate, height, (err, img) => {
+    // load promise 加入数组
+    const temp = new Jimp(32 * animate, height, (err, img) => {
       if (err) throw err;
       img.blit(image, 0, 0, posX * 32, posY * height, 32 * animate, height)
-        .getBuffer(Jimp.MIME_PNG, (err, data) => {
+        .getBuffer(Jimp.MIME_PNG, (err, buffer) => {
           if (err) throw err;
-          blocksBuffer[id] = data;
+          blocksBuffer[id] = buffer;
         });
     });
   });
+  // 加载icons
+  (function () {
+    const iconsData = main.icons;
+    const iconsImg = main.images.icons;
+    Object.keys(iconsData).forEach(id => {
+      const temp = new Jimp(32, 32, (err, img) => {
+        if (err) throw err;
+        img.blit(iconsImg, 0, 0, 0, iconsData[id] * 32, 32, 32)
+          .getBuffer(Jimp.MIME_PNG, (err, buffer) => {
+            if (err) throw err;
+            blocksBuffer[id] = buffer;
+          });
+      });
+    });
+  }());
+  // 加载额外images
+  (function () {
+    const { extraImages } = main.images;
+    Object.keys(extraImages).forEach(id => {
+      const { [id]: image } = extraImages;
+      // 较大的图片 可能被jimp 处理后体积增大 如bg.jpg 因此较大图片单独处理
+      // 因此在此重新读取文件重新写入
+      if (image.bitmap.width * image.bitmap.height >= 160000) {
+        fs.readFile(`${path.resolve(main.imagesDir, id)}`,
+          (err, img) => {
+            if (err) throw err;
+            fs.writeFile(`${path.resolve('./data', id)}`, img,
+              (err) => {
+                if (err) throw err;
+                console.log(`写入${id}成功`);
+              });
+          });
+        return;
+      }
+      image.getBuffer(Jimp.MIME_PNG, (err, imageBuffer) => {
+        if (err) throw err;
+        let basename = id;
+        if (id.lastIndexOf('.') !== -1) {
+          basename = id.substring(0, id.lastIndexOf('.'));
+        }
+        blocksBuffer[basename] = imageBuffer;
+      });
+    });
+  }());
   console.log('no');
-  // TODO: setTimeout => Promise
+  // new Jimp 是异步的，但是没有返回Promise 因此用setTimeout
   setTimeout(() => {
     const images = [];
     const options = {
@@ -151,7 +243,8 @@ loadImages().then(() => {
       allowRotation: true,
       exporter: 'Pixi',
       detectIdentical: false,
-      width: 1024,
+      width: 512,
+      height: 512,
     };
     const outputPath = path.resolve('./data');
 
@@ -171,5 +264,5 @@ loadImages().then(() => {
         });
       }
     });
-  }, 100);
+  });
 });
