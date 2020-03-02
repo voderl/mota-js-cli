@@ -25,5 +25,6 @@ module.exports = {
     'no-plusplus': ["error", { "allowForLoopAfterthoughts": true }],
     'no-shadow': 1,
     'no-param-reassign': 1,
+    'prefer-rest-params':0,
   },
 };

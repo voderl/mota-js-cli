@@ -1,5 +1,5 @@
 # [mota-js](https://github.com/ckcz123/mota-js)
-使用pixijs 和 tween.js 和 es6 
+使用[`pixijs`](https://github.com/pixijs/pixi.js) 和 [`tween.js`](https://github.com/tweenjs/tween.js) 和 es6 
 
 ## 目录详情：
 + mota-js ：主程序 [mota-js](https://github.com/ckcz123/mota-js)
@@ -8,10 +8,10 @@
 + test ： 一些测试工作
 ## 已完成，待优化：
 √：尝试node和[`free-tex-packer-core`](https://github.com/odrick/free-tex-packer-core)  和 [`jimp`](https://github.com/oliver-moran/jimp)。  
-遍历地图，将使用的图块集中到一张图片上，或者将附加的较小的图片也综合成一张图（最大尺寸512*512，大于的话分成多个图片）（较大的图片独立出来，不打包），得到png和json 来进行加载；  
+遍历地图，将使用的图块(包括icons，animates)集中到一张图片上，或者将附加的较小的图片也综合成一张图（最大尺寸512*512，大于的话分成多个图片）（较大的图片独立出来，不打包），得到png和json 来进行加载；  
   => nodeControl中的main.js  
   => webpack编译(`npm run buildNode`)后变成 `./nodeControl/index.bundle.js`  
-  => 使用node执行后得到`./nodeControl/data/{packer.json, packer.png}`
+  => 使用node执行`index.bundle.js`后得到`./nodeControl/data/{packer.json, packer.png}`  
 ![一个简单的示例](./nodeControl/data/packer-0.png);
 
 √：使用pixi.js导入json，以及加载的过程（加载的过程有一个动画scene 待后续scene完善后再添加）
