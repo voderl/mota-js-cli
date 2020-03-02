@@ -1,10 +1,17 @@
 const Jimp = require('jimp');
+const path = require('path');
+const fs = require('fs');
 
-Jimp.read('./images/autotile.png', (err, tile) => {
+const animates = path.resolve('../mota-js/project/animates');
+fs.readFile(path.resolve(animates, 'sword.animate'), (err, raw) => {
   if (err) throw err;
-  console.log(tile);
-  tile.crop(0, 0, 50, 50).getBuffer(Jimp.MIME_PNG, (err, data) => {
-    if (err) throw err;
-    console.log(data);
+  const data = JSON.parse(raw);
+  const regex = /^data:image\/\w+;base64,/;
+  data.bitmaps.forEach((rawBase, i) => {
+    if (!rawBase) return;
+    const base = rawBase.replace(regex, '');
+    const dataBuffer = Buffer.from(base, 'base64');
+    Jimp.read(dataBuffer)
+      .then(image => image.write(`./images/animate-${i}.png`));
   });
 });

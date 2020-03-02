@@ -3,17 +3,21 @@ import TWEEN from '@tweenjs/tween.js';
 
 // 加载过程中的进度条缓动特效
 class TexLoader {
-  constructor(packer, callback) {
-    this._process = 0;
-    this.processWord = '';
+  constructor(packer) {
+    this._progress = 0;
+    this.progressWord = '';
     this.length = 0;
     this.textures = {};
     this._tweens = null;
-    this.loadPacker(packer, callback);
+    this.packer = packer;
   }
 
-  get process() {
-    return this._process.toString(10).slice(0, 5);
+  start(callback) {
+    this.loadPacker(this.packer, callback);
+  }
+
+  get progress() {
+    return this._progress.toString(10).slice(0, 4);
   }
 
   static parseName(name) {
@@ -23,27 +27,35 @@ class TexLoader {
   }
 
   // 进度条 应有一个提前假装加载的进程 时间是 10倍 最大进度是单个图片的2/3
-  emitChange(value, time = 500) {
+  emitChange(value, time = 300, emitMask = true) {
     if (this._tweens !== null) {
       this._tweens.destroy();
       this._tweens = null;
     }
     if (!value) {
-      value = this._process + 2 / this.length / 3;
-      time *= 10;
+      value = this._progress + 200 / this.length / 3;
+      time *= 5;
     }
+    console.log(value, time);
     this._tweens = new TWEEN.Tween(this)
       .to({
-        _process: value,
+        _progress: value,
       }, time)
-      .easing(TWEEN.Easing.Quadratic.InOut)
       .onUpdate((obj) => {
-        console.log(obj.process);
+        //console.log(obj.progress);
       })
-      // 如果触发结束 说明下一个还没有加载出来，那就给一个假装加载的速度上去
-      .onComplete((obj) => {
-        this.emitChange();
+      .easing(TWEEN.Easing.Linear.None)
+      .start();
+    // 如果触发结束 说明下一个还没有加载出来，那就给一个假装加载的速度上去
+    if (emitMask && value < 100) {
+      this._tweens.onComplete((obj) => {
+        this.emitChange(null, time, false);
       });
+    } else if (value >= 100) {
+      this._tweens.onComplete((obj) => {
+        console.log('Easing end');
+      });
+    }
     return this._tweens;
   }
 
@@ -53,7 +65,7 @@ class TexLoader {
     packer.keys().forEach((name) => {
       // name startsWith './'
       const fullName = name.slice(2);
-      const [id, ext] = TexLoader.parse(fullName);
+      const [id, ext] = TexLoader.parseName(fullName);
       if (!list[id]) list[id] = {};
       const item = list[id];
       if (['png', 'jpg', 'ico', 'gif'].includes(ext.toLowerCase())) item.image = packer(name).default;
@@ -65,6 +77,11 @@ class TexLoader {
     this.length = arr.length;
     arr.forEach((id) => {
       const item = list[id];
+      if (id === 'animates') {
+        // load 动画json
+        textures.animates = item.data;
+        return;
+      }
       loader.add(item.image, (resource) => {
         const { texture: { baseTexture } } = resource;
         if (!item.data) {
@@ -78,8 +95,10 @@ class TexLoader {
       });
     });
     loader.load();
-    loader.onProgress.add((loader) => { this.emitChange(loader.process); });
-    if (callback) loader.onComplete.add(callback);
+    loader.onProgress.add((loader) => {
+      this.emitChange(loader.progress);
+    });
+    if (callback) loader.onComplete.add(() => callback(textures));
     this.emitChange();
     return loader;
   }

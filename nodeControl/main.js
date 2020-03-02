@@ -13,6 +13,7 @@ const texturePacker = require('free-tex-packer-core');
 const main = { floors: { } };
 global.main = main;
 global.window = {};
+main.outputPath = path.resolve('./data');
 main.tilesets = data.main.tilesets;
 main.autotiles = Object.keys(icons.autotile);
 main.icons = {
@@ -60,9 +61,11 @@ main.images = {
   tilesets: {},
   autotile: {},
   extraImages: {},
+  animatesBuffer: {},
 };
 const floors = require.context('../mota-js/project/floors/', false, /\.js$/);
 const { floorIds, images: rawImages } = data.main;
+main.animates = data.main.animates;
 main.rawImages = rawImages;
 const blockIds = {};
 // 加载出地图数组中所使用的block 的num
@@ -234,7 +237,13 @@ loadImages().then(() => {
       });
     });
   }());
-  console.log('no');
+  // 加载animate 是否存在其余文件
+  (function () {
+    const { animatesBuffer } = main.images;
+    Object.keys(animatesBuffer).forEach(id => {
+      blocksBuffer[id] = animatesBuffer[id];
+    });
+  }());
   // new Jimp 是异步的，但是没有返回Promise 因此用setTimeout
   setTimeout(() => {
     const images = [];
@@ -246,8 +255,7 @@ loadImages().then(() => {
       width: 512,
       height: 512,
     };
-    const outputPath = path.resolve('./data');
-
+    const { outputPath } = main;
     Object.keys(blocksBuffer).forEach((id) => images.push({
       path: id,
       contents: blocksBuffer[id],
