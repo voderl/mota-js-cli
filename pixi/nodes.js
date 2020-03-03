@@ -1,4 +1,7 @@
 // 节点系统 相当于sprite的拓展
+/**
+ * extend Sprite to Node
+ */
 import * as $ from 'pixi.js';
 import TWEEN from '@tweenjs/tween.js';
 import utils from './utils';
@@ -10,11 +13,13 @@ function _nodes() {
 }
 _nodes.prototype.update = function () {
   const node = this.activeNodes;
+  let temp;
   for (let i = 0; i < node.length; i++) {
-    if (node[i]._destroyed) {
+    temp = node[i];
+    if (temp._destroyed) {
       node.splice(i, 1);
       i -= 1;
-    } else node[i]._update();
+    } else temp._update(temp);
   }
 };
 // 将这些方法放入原型链
@@ -90,7 +95,10 @@ _nodes.prototype.registerRender = function (name, proto, add) {
   this.Renders[name] = Render;
   return null;
 };
-
+/**
+ * 生成Render
+ * @constructor
+ */
 _nodes.prototype.getRender = function (RenderPrototype) {
   if (RenderPrototype.prototype)RenderPrototype = RenderPrototype.prototype;
   function node(...args) {
@@ -121,7 +129,7 @@ _nodes.prototype.getNode = function (type, options = {}) {
   // node 的 update ？ 如果有update 则在node的active node里加入
   // register里就注册的  不是options
   // node.scene=options.scene;
-  if (typeData.init.call(node, options) || options.disable === true) return node;
+  if ((typeData.init && typeData.init.call(node, options)) || options.disable === true) return node;
 
   const {
     start, event, data, update, destroy, init,
@@ -152,6 +160,7 @@ _nodes.prototype.getNode = function (type, options = {}) {
       else node[n] = data[n];
     }
   }
+  options = null;
   return node;
 };
 // 节点的生成参数：
@@ -307,5 +316,28 @@ nodes.register('border', {
       this.x = x;
       this.y = y;
     });
+    return true;
   },
 });
+nodes.register('zone', {
+  Render: 'Graphics',
+  init({
+    zone,
+    color = 0x0,
+  }) {
+    this.addListener('added', () => {
+      this.beginFill(utils.getColor(color));
+      if (!(zone instanceof Array)) {
+        const t = this.parent.zone;
+        console.log(this.parent);
+        zone = [0, 0, t[2], t[3]];
+      }
+      this.drawRect(...zone);
+      this.endFill();
+    });
+  },
+});
+nodes.register('graphics', {
+  Render: 'Graphics',
+});
+export default nodes;

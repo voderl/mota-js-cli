@@ -14,6 +14,7 @@ const utils = {
     if (arguments.length === 3) {
       return (arguments[0] << 16) + (arguments[1] << 8) + arguments[2];
     }
+    if (Number.isInteger(str)) return str;
     if (str.startsWith('rgb')) {
       const rgb = str.split(',');
       const r = parseInt(rgb[0].split('(')[1]);

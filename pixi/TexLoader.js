@@ -1,5 +1,7 @@
 import * as $ from 'pixi.js';
 import TWEEN from '@tweenjs/tween.js';
+import nodes from './nodes';
+import ui from './ui';
 
 // 加载过程中的进度条缓动特效
 class TexLoader {
@@ -10,14 +12,55 @@ class TexLoader {
     this.textures = {};
     this._tweens = null;
     this.packer = packer;
+    this.fontStyle = new $.TextStyle({
+      fontStyle: 'bold',
+      fill: 'white',
+      fontSize: '40px',
+      align: 'center',
+      stroke: 'blue',
+      strokeThickness: 2,
+    });
+  }
+
+  get progress() {
+    return `${this._progress.toString(10).slice(0, 4)}%`;
   }
 
   start(callback) {
     this.loadPacker(this.packer, callback);
-  }
-
-  get progress() {
-    return this._progress.toString(10).slice(0, 4);
+    const loading = pixi.scenes.addScene('loading', 'main');
+    this.loading = loading;
+    const _this = this;
+    loading.on('show', function () {
+      this.addNode('zone');
+      this.addNode('text', {
+        text: '0.00',
+        style: _this.fontStyle,
+        update() {
+          this.text = _this.progress;
+        },
+        start() {
+          ui.setLoc(this, 0.5, 0.5, 0.5, 0.5);
+          this.removing = (cb) => {
+            this.changeTo({
+              alpha: 0,
+            }, 500, cb);
+          };
+        },
+      });
+      this.addNode('graphics', {
+        start() {
+          this.lineStyle(4, 0xffffff);
+          ui.setLoc(this, 0.5, 0.5, 0.5, 0.6);
+          this.moveTo(-100, 0);
+          this.lineTo(100, 0);
+        },
+        update() {
+          this.width = 3 * _this._progress;
+        },
+      });
+    });
+    loading.show();
   }
 
   static parseName(name) {
@@ -42,7 +85,7 @@ class TexLoader {
         _progress: value,
       }, time)
       .onUpdate((obj) => {
-        //console.log(obj.progress);
+        // console.log(obj.progress);
       })
       .easing(TWEEN.Easing.Linear.None)
       .start();
@@ -54,6 +97,7 @@ class TexLoader {
     } else if (value >= 100) {
       this._tweens.onComplete((obj) => {
         console.log('Easing end');
+        this.loading.hide();
       });
     }
     return this._tweens;

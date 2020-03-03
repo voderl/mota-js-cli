@@ -3,7 +3,7 @@
 */
 import TWEEN from '@tweenjs/tween.js';
 
-// no-multi-assign
+/** 拓展TWEEN的destroy方法，在node（节点sprite）destroy时tween也destroy */
 TWEEN.Tween.prototype.destroy = function () {
   if (this._isPlaying) this.stop();
   this._group = null;
