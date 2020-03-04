@@ -19,7 +19,9 @@ _nodes.prototype.update = function () {
     if (temp._destroyed) {
       node.splice(i, 1);
       i -= 1;
-    } else temp._update(temp);
+    } else if (temp.parent !== null) {
+      temp._update();
+    }
   }
 };
 // 将这些方法放入原型链
@@ -272,6 +274,14 @@ nodes.register('tilingSprite', {
     width,
     height,
   }) {
+    if (!width && !height) {
+      this.addListener('added', () => {
+        const [x, y, w, h] = this.parent.zone;
+        this.width = w;
+        this.height = h;
+      });
+      return;
+    }
     this.width = width;
     this.height = height;
   },
@@ -301,11 +311,11 @@ nodes.register('border', {
         const globalZone = this.parent.zone;
         zone = [0, 0, globalZone[2], globalZone[3]];
       }
-      const {
+      const [
         x, y, w, h,
-      } = zone;
+      ] = zone;
       if (fillColor && !Number.isInteger(fillColor))fillColor = utils.getColor(fillColor);
-      if (!Number.isInteger(lineColor))lineColor = utils.getColor(lineColor);
+      if (!Number.isInteger(lineColor))lineColor = utils.getColor(lineColor || main.borderColor);
       this.beginFill(fillColor, fillAlpha);
       this.lineStyle(lineWidth, lineColor, lineAlpha, alignment);
       if (radius) {

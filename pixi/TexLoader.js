@@ -1,6 +1,7 @@
 import * as $ from 'pixi.js';
 import TWEEN from '@tweenjs/tween.js';
-import nodes from './nodes';
+import { scenes } from './scenes';
+import event from './event';
 import ui from './ui';
 
 // 加载过程中的进度条缓动特效
@@ -11,6 +12,7 @@ class TexLoader {
     this.length = 0;
     this.textures = {};
     this._tweens = null;
+    this.callback = null;
     this.packer = packer;
     this.fontStyle = new $.TextStyle({
       fontStyle: 'bold',
@@ -26,9 +28,10 @@ class TexLoader {
     return `${this._progress.toString(10).slice(0, 4)}%`;
   }
 
-  start(callback) {
-    this.loadPacker(this.packer, callback);
-    const loading = pixi.scenes.addScene('loading', 'main');
+  start() {
+    this.loadPacker(this.packer);
+    // 加载特效
+    const loading = scenes.addScene('loading', 'main');
     this.loading = loading;
     const _this = this;
     loading.on('show', function () {
@@ -97,13 +100,13 @@ class TexLoader {
     } else if (value >= 100) {
       this._tweens.onComplete((obj) => {
         console.log('Easing end');
-        this.loading.hide();
+        this.loading.destroy();
       });
     }
     return this._tweens;
   }
 
-  loadPacker(packer, callback) {
+  loadPacker(packer) {
     const { textures } = this;
     const list = {};
     packer.keys().forEach((name) => {
@@ -121,9 +124,9 @@ class TexLoader {
     this.length = arr.length;
     arr.forEach((id) => {
       const item = list[id];
-      if (id === 'animates') {
+      if (item.data && !item.image) {
         // load 动画json
-        textures.animates = item.data;
+        textures[id] = item.data;
         return;
       }
       loader.add(item.image, (resource) => {
@@ -138,14 +141,37 @@ class TexLoader {
         });
       });
     });
-    loader.load();
     loader.onProgress.add((loader) => {
       this.emitChange(loader.progress);
     });
-    if (callback) loader.onComplete.add(() => callback(textures));
+    loader.onComplete.add(() => {
+      TexLoader.handleTextures(textures);
+      event.emit('loadComplete', textures);
+    });
+    loader.load();
     this.emitChange();
     return loader;
   }
-}
 
-export default TexLoader;
+  // 如果有动画，将textures分割成数组, 同时处理hero成易处理的格式
+  static handleTextures(textures) {
+    const { _info: info } = textures;
+    if (!(info instanceof Object)) return;
+    const list = Object.keys(info);
+    list.forEach(id => {
+      const { animate } = info[id];
+      if (animate === 1) return;
+      const texture = textures[id];
+      [textures[id]] = ui.splitTexture(texture, 1, animate);
+    });
+    textures.hero = this.handleHero(textures.hero);
+  }
+
+  static handleHero(hero) {
+    return ui.splitTexture(hero, ['down', 'left', 'right', 'up'], 4);
+  }
+}
+const mainPacker = require.context('./../nodeControl/data/', false, /(png|json|jpg|ico|gif|svg)$/);
+const loader = new TexLoader(mainPacker);
+loader.start();
+export default loader;

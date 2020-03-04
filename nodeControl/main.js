@@ -168,6 +168,15 @@ loadImages().then(() => {
   console.log('资源加载完成');
   const blocksBuffer = {};
   // 加载blocks
+  const info = { };
+  const _maps = { };
+  const writeFile = (name, data) => {
+    fs.writeFile(`${main.outputPath}/${name}`, data,
+      (err) => {
+        if (err) throw err;
+        console.log(`写入${name}成功`);
+      });
+  };
   Object.keys(blockIds).forEach((numId) => {
     const num = parseInt(numId, 10);
     const block = getBlock(num);
@@ -176,6 +185,14 @@ loadImages().then(() => {
       image, posX, posY, animate, alone, id, height,
     } = block;
     if (!image) return;
+    info[id] = { num, animate };
+    _maps[numId] = block;
+    delete block.image;
+    delete block.alone;
+    delete block.posX;
+    delete block.height;
+    delete block.posY;
+    delete block.animate;
     if (alone) {
       image.getBuffer(Jimp.MIME_PNG, (err, imageBuffer) => {
         if (err) throw err;
@@ -193,6 +210,9 @@ loadImages().then(() => {
         });
     });
   });
+  // write info
+  writeFile('_info.json', JSON.stringify(info));
+  writeFile('_maps.json', JSON.stringify(_maps));
   // 加载icons
   (function () {
     const iconsData = main.icons;

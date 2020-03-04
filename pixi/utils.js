@@ -1,4 +1,12 @@
 const utils = {
+  cloneObj(obj) {
+    const newObj = obj instanceof Array ? [] : {};
+    for (const key in obj) {
+      const val = obj[key];
+      newObj[key] = typeof val === 'object' ? this.cloneObj(val) : val;
+    }
+    return newObj;
+  },
   isInterger(num) {
     return typeof num === 'number' && (num | 1) === 0;
   },

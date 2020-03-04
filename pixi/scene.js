@@ -7,19 +7,18 @@ const methods = {
   checkLength() {
     if (this.children.length === 0 && !this.scene.flashing) {
       if (this.parent) this.parent.removeChild(this);
+      if (this.scene.hideCallback instanceof Function) this.scene.hideCallback();
     }
   },
   /** @this Scene */
   show() {
-    if (this.flashing) return;
-    const container = this.Container;
+    const { container } = this;
     if (container.parent) return;
     const { parent } = this;
-    if (parent !== null)parent.Container.addChild(this.Container);
-    console.log(this, `show ${this.id}`);
+    if (parent !== null) parent.container.addChild(this.container);
+    console.log(`show ${this.id}`);
   },
   flash() {
-    if (!this.active) return;
     this.flashing = true;
     this.emit('hide');
     this.emit('show');
@@ -27,10 +26,22 @@ const methods = {
     this.flashing = false;
   },
   /** @this Scene */
-  hide() {
-    console.log(this, 'hide');
+  hide(callback) {
+    this.hideCallback = callback;
+    console.log(`hide ${this.id}`);
     this.nodes.forEach(node => node.remove());
     this.nodes = [];
+  },
+  destroy() {
+    delete this.container.scene;
+    this.container.destroy();
+    delete this.container;
+    this.hideCallback = null;
+    const parentScene = this.parent;
+    if (parentScene) parentScene.removeScene(this);
+    delete this.parent;
+    this.removeAllListeners();
+    console.log(`destroy ${this.id}`);
   },
   /**
    * 什么时候reLoc？重新resize后会resize，而show时不会resize
@@ -40,11 +51,11 @@ const methods = {
    * @this Scene */
   reLoc() {
     // 取消resizeType 只有position
-    const container = this.Container;
+    const { container } = this;
     const { style } = resize;
     const globalZone = style[this.resizeType];
     const zone = [...globalZone];
-    if (!this.isRoot) { zone[0] = 0; zone[1] = 0; }
+    if (!this.inRoot) { zone[0] = 0; zone[1] = 0; }
     if (this.position instanceof Array) {
       zone[0] += this.position[0];
       zone[1] += this.position[1];
@@ -101,8 +112,8 @@ export default class Scene extends utils.EventEmitter {
     this.flashing = false;
     this.resizeType = resizeType;
     this.position = position;
-    this.Container = container || new Container();
-    this.Container.scene = this;
+    this.container = container || new Container();
+    this.container.scene = this;
     this.parent = parent;
     this.nodes = [];
     this.children = [];
@@ -110,26 +121,27 @@ export default class Scene extends utils.EventEmitter {
     this.addListener('hide', methods.hide);
     this.addListener('flash', methods.flash);
     this.addListener('reLoc', methods.reLoc);
-    this.Container.addListener('childRemoved', methods.checkLength);
+    this.container.addListener('childRemoved', methods.checkLength);
     if (zIndex) {
-      this.Container.sortableChildren = true;
-      this.Container.zIndex = zIndex;
+      this.container.sortableChildren = true;
+      this.container.zIndex = zIndex;
     }
     this.emit('reLoc');
   }
 
   get active() {
-    if (this.isRoot) return true;
-    return this.Container.parent !== null;
+    if (this.inRoot) return true;
+    return this.container.parent !== null;
   }
 
-  get isRoot() {
-    return this.parent === null;
+  get inRoot() {
+    return (this.parent) && this.parent.parent === null;
   }
 
   addScene(id, resizeType, position) {
+    if (id instanceof Array) return id.forEach(_id => this.addScene(_id));
     position = methods.combinePosition(this.position, position);
-    const temp = new Scene(id, resizeType, {
+    const temp = new Scene(id, resizeType || this.resizeType, {
       position,
       parent: this,
     });
@@ -137,10 +149,15 @@ export default class Scene extends utils.EventEmitter {
     return temp;
   }
 
+  removeScene(scene) {
+    const index = this.children.indexOf(scene);
+    if (index > -1) this.children.splice(index, 1);
+  }
+
   addNode(type, options) {
     if (type instanceof Array) return type.forEach((item) => { this.addNode(item[0], item[1]); });
     const node = nodes.getNode(type, options);
-    const container = this.Container;
+    const { container } = this;
     if (node.zIndex !== 0 && !container.sortableChildren)container.sortableChildren = true;
     container.addChild(node);
     this.nodes.push(node);
@@ -157,6 +174,13 @@ export default class Scene extends utils.EventEmitter {
       if (temp instanceof Scene) return temp;
     }
     return false;
+  }
+
+  doFunc(Func) {
+    if (this.disable) return;
+    Func.apply(this);
+    if (this.stopPropagation) return;
+    this.children.forEach(s => s.doFunc(Func));
   }
 
   doEmit(type, ...args) {
@@ -181,5 +205,9 @@ export default class Scene extends utils.EventEmitter {
 
   reLoc(...args) {
     return this.doEmit('reLoc', ...args);
+  }
+
+  destroy() {
+    this.hide(methods.destroy);
   }
 }

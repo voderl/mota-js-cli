@@ -26,5 +26,7 @@ module.exports = {
     'no-shadow': 1,
     'no-param-reassign': 1,
     'prefer-rest-params':0,
+    'func-names': 1,
+    'no-undef': 1,
   },
 };
