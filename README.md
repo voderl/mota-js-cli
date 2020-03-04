@@ -14,11 +14,14 @@
   => 使用node执行`index.bundle.js`后得到`./nodeControl/data/{packer.json, packer.png}`  
 ![一个简单的示例](./nodeControl/data/packer-0.png);
 
-√：使用pixi.js导入json，以及加载的过程（加载的过程有一个动画scene 待后续scene完善后再添加）
+√：使用pixi.js导入json，以及加载的过程（加载的过程有一个动画scene 待后续scene完善后再添加）  
+√：绘制背景~
 ## 目前在做： 
+* 首先尝试所有的显示功能，再进行操作，再大改
+* 动画图片导入后切割成动画（由于打包时对图片进行了剪切，而生成texture不继承切割，需要自己弄一套）
 * 在runtime里加载打包出的json和png，来加载图片，并使得图片和tween能够对应起来
 * 再优化一下scene类，进而实现各种效果
-* 导入之前做好的nodes类
+* 导入之前做好的nodes类（待优化）
 * resize时获取三种类的位置statusBar game toolBar 并resize main
 
 ## TODO：
