@@ -1,106 +1,58 @@
-
+import event from '../event';
+import Autotile from './Autotile';
+import BaseBlock from './BaseBlock';
 import loader from '../TexLoader';
-import nodes from '../nodes';
+import utils from '../utils';
 
 const { textures } = loader;
 const idToNumber = textures._info;
-const blockInfo = textures._maps;
+const numberToInfo = textures._maps;
 
-const getNumberById = (id) => {
-  const t = idToNumber[id];
-  if (t instanceof Object) return t.num;
-  else console.error('不存在此id的图块');
-  return null;
-};
-const addInfo = (event) => {
-  if (event.cls.indexOf('enemy') === 0 && !event.trigger) {
-    event.trigger = 'battle';
-  }
-  if (event.cls === 'items' && !event.trigger) {
-    event.trigger = 'getItem';
-  }
-  if (event.noPass == null) {
-    if (event.cls !== 'items') {
-      event.noPass = true;
-    }
-  }
-};
-class Block {
-  constructor(id, x, y, _addInfo, eventFloor) {
-    console.log(id);
-    const num = Number.isInteger(id) ? id : getNumberById(id);
-    this.destroyed = false;
-    this.x = x;
-    this.y = y;
-    const info = blockInfo[num];
-    if (!(info instanceof Object)) return console.error(`不存在数字id为${num}的图块`);
-    this.texture = textures[info.id];
-    this.event = info;
-    this.event.number = num;
-    if (_addInfo) addInfo(this.event);
-    if (eventFloor) {
-      this.addEvent((eventFloor.events || {})[`${x},${y}`]);
-      const changeFloor = (eventFloor.changeFloor || {})[`${x},${y}`];
-      if (changeFloor) this._addEvent(block, x, y, { trigger: 'changeFloor', data: changeFloor });
-    }
-    return this;
-  }
+event.setFresh('bg', (floorId = core.status.floorId) => core.maps._getBgFgMapArray('bg', floorId, true));
+event.setFresh('fg', (floorId = core.status.floorId) => core.maps._getBgFgMapArray('fg', floorId, true));
 
-  static getInfo(id) {
-    return new Block(id).getInfo();
-  }
+event.setFresh('event', (floorId = core.status.floorId) => {
+  const { width, height } = core.floors[floorId];
+  const { blocks } = core.status.maps[floorId];
+  return core.maps._getMapArrayFromBlocks(blocks, width, height);
+});
 
-  getInfo() {
-    return {
-      number: this.event.number,
-      id: this.event.id,
-      cls: this.event.cls,
-      texture: this.texture,
-      faceIds: this.event.faceIds || {},
-    };
-  }
 
-  drawTo(scene) {
-    const node = scene.addNode('sprite', {
-      texture: this.texture,
-    });
-    node.position.set(x * 32 + 16 - node.width / 2, y * 32 + 32 - node.height);
+// function getNumberById(id) {
+//   const t = idToNumber[id];
+//   if (t instanceof Object) return t.num;
+//   console.error('不存在此id的图块');
+//   return null;
+// }
+function getBlock(id, x, y, _addInfo, eventFloor) {
+  let num;
+  if (Number.isInteger(id)) num = id;
+  else {
+    if (!id) return this;
+    if (id.endsWith(':f')) this.disable = true;
+    else if (id.endsWith(':t')) this.disable = false;
+    num = parseInt(id, 10);
   }
+  const info = numberToInfo[num];
 
-  addEvent(event) {
-    const { x, y } = this;
-    if (typeof event === 'string') {
-      event = { data: [event] };
-    } else if (event instanceof Array) {
-      event = { data: event };
-    }
-    event.data = event.data || [];
-
-    // 覆盖enable
-    if (this.disable == null && event.enable != null) {
-      this.disable = !event.enable;
-    }
-    // 覆盖animate
-    if (event.animate === false) {
-      this.animate = 1;
-    }
-    // 覆盖所有属性
-    for (const key in event) {
-      if (key !== 'enable' && key !== 'animate' && event[key] != null) {
-        this[key] = core.clone(event[key]);
-      }
-    }
-    // 给无trigger的增加trigger:action
-    if (!this.trigger) {
-      this.trigger = 'action';
-    }
-  }
-
-  destroy() {
-    this.texture = null;
-    this.event = null;
-    this.destroyed = true;
-  }
+  const _tempInfo = info instanceof Object ? info : {
+    cls: 'terrains',
+    id: 'none',
+    noPass: false,
+  };
+  _tempInfo.number = num;
+  const block = _tempInfo.cls === 'autotile'
+    ? new Autotile(_tempInfo, x, y, _addInfo, eventFloor)
+    : new BaseBlock(_tempInfo, x, y, _addInfo, eventFloor);
+  return block;
 }
 
-export default Block;
+function getInfo(id) {
+  return getBlock(id).getInfo();
+}
+
+export {
+  getBlock,
+  getInfo,
+  BaseBlock,
+};

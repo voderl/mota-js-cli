@@ -46,6 +46,8 @@
   "dependencies": {
     "@tweenjs/tween.js": "^18.5.0",
     "babel-loader": "^8.0.6",
+    "dexie": "^2.0.4",
+    "localforage": "^1.7.3",
     "pixi.js": "^5.2.0"
   }
 }

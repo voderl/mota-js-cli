@@ -248,19 +248,20 @@ nodes.registerRender('StateSprite', $.AnimatedSprite, {
     const data = frames[name];
     if (data instanceof Array) {
       this.textures = data;
+      this.status = name;
     }
   },
   // 比如hero节点 一直不变就不删除了
 });
 nodes.register('hero', {
-  Render(Renders, { textures }) {
-    return new Renders.StateSprite(Object.values(textures)[0]);
+  Render(Renders, { texture }) {
+    return new Renders.StateSprite(Object.values(texture)[0]);
   },
   init({
-    textures,
+    texture,
     time = 100,
   }) {
-    this._frames = textures;
+    this._frames = texture;
     this.animationSpeed = 1000 / time / 60;
   },
 });

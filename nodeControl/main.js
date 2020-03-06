@@ -136,6 +136,7 @@ const getBlock = (num) => {
     const { id, cls } = block;
     if (cls === 'autotile') {
       block.image = main.images.autotile[id];
+      block.animate = Math.ceil(main.images.autotile[id].bitmap.width / 96);
       block.alone = true;
     } else {
       block.image = main.images[cls];

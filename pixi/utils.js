@@ -1,9 +1,34 @@
+
 const utils = {
-  cloneObj(obj) {
+  /**
+   * deep clone a Object
+   * @param {Object} obj  
+   */
+  cloneTo(to, from) {
+    for (const key in from) {
+      to[key] = this.clone(from[key]);
+    }
+  },
+  cloneWith(obj, Cloner) {
+    if (!(obj instanceof Object)) return obj;
     const newObj = obj instanceof Array ? [] : {};
     for (const key in obj) {
       const val = obj[key];
-      newObj[key] = typeof val === 'object' ? this.cloneObj(val) : val;
+      const result = Cloner(val);
+      if (result) {
+        newObj[key] = result;
+      } else {
+        newObj[key] = val instanceof Object ? this.cloneWith(val, Cloner) : val;
+      }
+    }
+    return newObj;
+  },
+  clone(obj) {
+    if (!(obj instanceof Object)) return obj;
+    const newObj = obj instanceof Array ? [] : {};
+    for (const key in obj) {
+      const val = obj[key];
+      newObj[key] = val instanceof Object ? this.clone(val) : val;
     }
     return newObj;
   },

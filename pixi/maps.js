@@ -1,10 +1,12 @@
 import { Texture, Rectangle } from 'pixi.js';
 import event from './event';
-import { game } from './scenes';
 import nodes from './nodes';
-import Block from './libs/Block';
+import { getBlock, BaseBlock } from './libs/Block';
+import ui from './ui';
 
-window.Block = Block;
+// 在block里维护一系列数组，只有改变时才重新计算，
+// bg改变背景 bg fg没有图块
+// 怎么计入存档
 const maps = {
   getTexture(name) {
     const { textures } = window.pixi;
@@ -12,14 +14,14 @@ const maps = {
     return texture;
   },
   addBlock(scene, block, options) {
-    const { texture } = block;
-    const node = scene.addNode('sprite', {
-      texture,
-    });
-    node.position.set(block.x * 32 + 16 - node.width / 2,
-      block.y * 32 + 32 - node.height);
-
-    Object.assign(node, options);
+    if (!(block instanceof BaseBlock)) {
+      block = getBlock(block, 0, 0);
+    }
+    const { texture, cls } = block;
+    const node = block.drawTo(scene);
+    if (node instanceof Array) {
+      node.forEach(_node => Object.assign(node, options));
+    }
     return node;
   },
   drawImage(scene, name, dx, dy, dw, dh, x, y, w, h) {
@@ -57,22 +59,72 @@ const maps = {
   drawBgFgMap(scene, floorId = core.status.floorId, name) {
     const { width, height } = core.floors[floorId];
     const _maps = core.maps;
-    const arr = _maps._getBgFgMapArray(name, floorId, true);
-    console.log(arr);
+    const arr = event.fresh(name, floorId);
     let eventArr = null;
     if (name === 'fg' && this.shouldBlurFg) {
-      eventArr = _maps.getMapArray(floorId);
+      eventArr = event.fresh('event', floorId);
     }
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
         if (arr[y][x] !== 0) {
-          const block = new Block(arr[y][x], x, y);
-          console.log(block);
+          const block = getBlock(arr[y][x], x, y);
           block.name = name;
           // --- 前景虚化
           if (eventArr != null && eventArr[y][x] !== 0) {
             this.addBlock(scene, block, { alpha: 0.6 });
           } else this.addBlock(scene, block);
+        }
+      }
+    }
+  },
+  drawDamage(scene, style, floorId = core.status.floorId) {
+    console.log(style);
+    core.status.maps[floorId].blocks.forEach((block) => {
+      if (!block.disable && block.event.cls.indexOf('enemy') === 0 && block.event.displayDamage !== false) {
+        const { x, y } = block;
+        if (core.flags.displayEnemyDamage) {
+          const damageString = core.enemys.getDamageString(block.event.id, x, y, floorId);
+          const { damage } = damageString;
+          const { color } = damageString;
+          ui.drawText(scene, damage, ui.getTextStyle(style, {
+            fill: color,
+          }), 32 * x + 1, 32 * (y + 1) - 1, {
+            align: 'left',
+          });
+          // core.fillBoldText(ctx, damage, 32 * x + 1, 32 * (y + 1) - 1, color);
+        }
+        if (core.flags.displayCritical) {
+          let critical = core.enemys.nextCriticals(block.event.id, 1, x, y, floorId);
+          critical = core.formatBigNumber((critical[0] || [])[0], true);
+          if (critical === '???') critical = '?';
+          ui.drawText(scene, critical, style, 32 * x + 1, 32 * (y + 1) - 11, {
+            align: 'left',
+          });
+          // core.fillBoldText(ctx, critical, 32 * x + 1, 32 * (y + 1) - 11, '#FFFFFF');
+        }
+      }
+    });
+  },
+  drawExtraDamage(scene, style, floorId = core.status.floorId) {
+    if (core.flags.displayExtraDamage) {
+      const { width, height } = core.floors[floorId];
+      for (let x = 0; x < width; x++) {
+        for (let y = 0; y < height; y++) {
+          let damage = core.status.checkBlock.damage[`${x},${y}`] || 0;
+          if (damage > 0) { // 该点伤害
+            damage = core.formatBigNumber(damage, true);
+            ui.drawText(scene, damage, ui.getTextStyle(style, {
+              fill: '#FF7F00',
+            }), 32 * x + 16, 32 * (y + 1) - 14, {
+              align: 'center',
+            });
+          } else if (core.status.checkBlock.ambush[`${x},${y}`]) { // 检查捕捉
+            ui.drawText(scene, '!', ui.getTextStyle(style, {
+              fill: '#FF7F00',
+            }), 32 * x + 16, 32 * (y + 1) - 14, {
+              align: 'center',
+            });
+          }
         }
       }
     }
@@ -84,28 +136,5 @@ const maps = {
 
   },
 };
-game.on('show', function show() {
-  const { textures } = window.pixi;
-  /** draw Border */
-  this.addNode('border');
-});
 
-game.getScene('bg').on('show', function (floorId = core.status.floorId) {
-  const { textures } = window.pixi;
-  const { width } = core.floors[floorId];
-  const { height } = core.floors[floorId];
-  const groundId = (core.status.maps || core.floors)[floorId].defaultGround || 'ground';
-  // add Bg
-  const texture = textures[groundId];
-  this.addNode('tilingSprite', {
-    texture: texture || textures.ground,
-  });
-  // draw Floor Images
-  // draw Blocks
-  maps.drawBgFgMap(this, floorId, 'bg');
-});
-
-event.on('start', () => {
-  game.flash();
-});
 export default maps;

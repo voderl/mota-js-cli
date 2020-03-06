@@ -1,53 +1,23 @@
-import * as $ from 'pixi.js';
+import Dexie from 'dexie';
 
-window.$ = $;
-const app = new $.Application({
-  width: 400,
-  height: 400,
-  antialias: true,
-  transparent: false,
-  resolution: 1,
+/**
+ * 新建一个数据库
+ */
+const db = new Dexie('testDatabase');
+window.db = db;
+db.version(1).stores({
+  test: '++id,data',
 });
-window.app = app;
-document.body.appendChild(app.view);
-const textures = {};
-window.textures = textures;
-const _packer = require.context('./../nodeControl/data/', false, /(png|json|jpg|ico|gif|svg)$/);
-const loadPacker = (packer) => {
-  const list = { };
-  packer.keys().forEach((name) => {
-    // name startsWith './'
-    const fullName = name.slice(2);
-    const [id, ext] = fullName.split('.');
-    if (!list[id]) list[id] = {};
-    const item = list[id];
-    if (['png', 'jpg', 'ico', 'gif'].includes(ext.toLowerCase())) item.image = packer(name).default;
-    else if (ext.toLowerCase() === 'json') item.data = packer(name);
-  });
-  const loader = new $.Loader();
-  const { Spritesheet } = $;
-  Object.keys(list).forEach((id) => {
-    const item = list[id];
-    loader.add(item.image, (resource) => {
-      const { texture: { baseTexture } } = resource;
-      if (!item.data) {
-        textures[id] = baseTexture;
-        return;
-      }
-      const sheet = new Spritesheet(baseTexture, item.data);
-      sheet.parse((_textures) => {
-        Object.assign(textures, _textures);
-      });
-    });
-  });
-  loader.load();
-  loader.onProgress.add((loader) => {console.log(loader.progress)});
-  return loader;
-};
-loadPacker(_packer);
-
-window.getSprite = function (id) {
-  const _texture = textures[id];
-  if (_texture) return new $.Sprite(_texture);
-  return null;
-};
+db.version(2).stores({
+  test: 'id',
+});
+/**
+ * 一个塔建立一个数据库不太可靠
+ * 只有一个数据库，每次更改数据也不能全都读出来 ？
+ * 目的是一个数组或者对象，只读取或更改一部分
+ * 即store可以嵌套，先读塔，再读对应存档，只读一部分
+ */
+//
+// Manipulate and Query Database
+//
+// db.friends.add({ name: 'Josephine', age: 21 }).then(() => 

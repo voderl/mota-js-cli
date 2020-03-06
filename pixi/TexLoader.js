@@ -1,12 +1,13 @@
 import * as $ from 'pixi.js';
 import TWEEN from '@tweenjs/tween.js';
-import { scenes } from './scenes';
+
 import event from './event';
 import ui from './ui';
 
 // 加载过程中的进度条缓动特效
 class TexLoader {
   constructor(packer) {
+    this.trash = {};
     this._progress = 0;
     this.progressWord = '';
     this.length = 0;
@@ -30,40 +31,6 @@ class TexLoader {
 
   start() {
     this.loadPacker(this.packer);
-    // 加载特效
-    const loading = scenes.addScene('loading', 'main');
-    this.loading = loading;
-    const _this = this;
-    loading.on('show', function () {
-      this.addNode('zone');
-      this.addNode('text', {
-        text: '0.00',
-        style: _this.fontStyle,
-        update() {
-          this.text = _this.progress;
-        },
-        start() {
-          ui.setLoc(this, 0.5, 0.5, 0.5, 0.5);
-          this.removing = (cb) => {
-            this.changeTo({
-              alpha: 0,
-            }, 500, cb);
-          };
-        },
-      });
-      this.addNode('graphics', {
-        start() {
-          this.lineStyle(4, 0xffffff);
-          ui.setLoc(this, 0.5, 0.5, 0.5, 0.6);
-          this.moveTo(-100, 0);
-          this.lineTo(100, 0);
-        },
-        update() {
-          this.width = 3 * _this._progress;
-        },
-      });
-    });
-    loading.show();
   }
 
   static parseName(name) {
@@ -100,7 +67,7 @@ class TexLoader {
     } else if (value >= 100) {
       this._tweens.onComplete((obj) => {
         console.log('Easing end');
-        this.loading.destroy();
+        event.emit('easingEnd');
       });
     }
     return this._tweens;

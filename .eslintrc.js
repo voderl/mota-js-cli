@@ -28,5 +28,6 @@ module.exports = {
     'prefer-rest-params':0,
     'func-names': 1,
     'no-undef': 1,
+    'no-trailing-spaces': ["error", { "ignoreComments": true }],
   },
 };

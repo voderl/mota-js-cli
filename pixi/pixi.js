@@ -1,12 +1,20 @@
 import * as $ from 'pixi.js';
 import TWEEN from '@tweenjs/tween.js';
+import Fresh from './libs/Fresh';
+
 import loader from './TexLoader';
-import ui from './ui';
+import { app, scenes, game } from './scenes';
 import event from './event';
+import maps from './maps';
+import utils from './utils';
+import ui from './ui';
+
 import nodes from './nodes';
 import resize from './resize';
-import { app, scenes, game } from './scenes';
-import maps from './maps';
+
+
+import { getBlock, BaseBlock } from './libs/Block';
+
 
 import './extend';
 
@@ -15,6 +23,7 @@ window.$ = $;
 app.ticker.add(() => {
   TWEEN.update();
   nodes.update();
+  Fresh.update();
 });
 const pixi = {
   TWEEN,
@@ -27,6 +36,9 @@ const pixi = {
   scenes,
   maps,
   ui,
+  BaseBlock,
+  getBlock,
+  utils,
   Easing: TWEEN.Easing.Quadratic.InOut,
   main: app.stage,
   ticker: app.ticker,
