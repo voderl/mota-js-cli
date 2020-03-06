@@ -5,7 +5,11 @@
 + mota-js ：主程序 [mota-js](https://github.com/ckcz123/mota-js)
 + pixi ：pixi.js的引入和部分使用
 + nodeControl ： 用node.js做的一些格式化处理，和预先处理
-+ test ： 一些测试工作
++ test ： 一些测试工作  
+## 当前进度：
+（画面显示正在进行中...已完成bg、event、hero、fg、damage）  
+![进度图](./nodeControl/images/progress.png) 
+
 ## 已完成，待优化：
 √：尝试node和[`free-tex-packer-core`](https://github.com/odrick/free-tex-packer-core)  和 [`jimp`](https://github.com/oliver-moran/jimp)。  
 遍历地图，将使用的图块(包括icons，animates)集中到一张图片上，或者将附加的较小的图片也综合成一张图（最大尺寸512*512，大于的话分成多个图片）（较大的图片独立出来，不打包），得到png和json 来进行加载；  
@@ -22,7 +26,7 @@
 * 在runtime里加载打包出的json和png，来加载图片，并使得图片和tween能够对应起来
 * 再优化一下scene类，进而实现各种效果
 * 导入之前做好的nodes类（待优化）
-* resize时获取三种类的位置statusBar game toolBar 并resize main
+* resize时获取三种类的位置statusBar game toolBar 类
 
 ## TODO：
 > + import 导入 √ （资源还没能导入）
