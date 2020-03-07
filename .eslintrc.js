@@ -29,5 +29,6 @@ module.exports = {
     'func-names': 1,
     'no-undef': 1,
     'no-trailing-spaces': ["error", { "ignoreComments": true }],
+    "max-classes-per-file": ["error", 2],
   },
 };

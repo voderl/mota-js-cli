@@ -1,5 +1,11 @@
 
 const utils = {
+  scan: {
+    up: { x: 0, y: -1 },
+    left: { x: -1, y: 0 },
+    down: { x: 0, y: 1 },
+    right: { x: 1, y: 0 },
+  },
   /**
    * deep clone a Object
    * @param {Object} obj  
@@ -44,6 +50,7 @@ const utils = {
     changing.start();
   },
   getColor(str) {
+    if (!str) return 0x0;
     if (arguments.length === 3) {
       return (arguments[0] << 16) + (arguments[1] << 8) + arguments[2];
     }
@@ -59,7 +66,7 @@ const utils = {
     if (str.startsWith('#')) {
       return parseInt(str.slice(1), 16);
     }
-    return false;
+    return null;
   },
   debounce(fn, delay) {
     // 定时器，用来 setTimeout

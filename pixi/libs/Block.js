@@ -24,18 +24,21 @@ event.setFresh('event', (floorId = core.status.floorId) => {
 //   console.error('不存在此id的图块');
 //   return null;
 // }
-function getBlock(id, x, y, _addInfo, eventFloor) {
+const Block = {};
+Block.get = function (id, x, y, _addInfo, eventFloor) {
   let num;
+  let disable = null;
   if (Number.isInteger(id)) num = id;
   else {
-    if (!id) return this;
-    if (id.endsWith(':f')) this.disable = true;
-    else if (id.endsWith(':t')) this.disable = false;
+    if (!id) return null;
+    if (id.endsWith(':f')) disable = true;
+    else if (id.endsWith(':t')) disable = false;
     num = parseInt(id, 10);
+    if (Number.isNaN(num)) num = (idToNumber[id] || {}).num;
   }
   const info = numberToInfo[num];
-
-  const _tempInfo = info instanceof Object ? info : {
+  /** 这个地方因为没有浅复制导致出现bug，找了一个半小时，心态爆炸 */
+  const _tempInfo = info instanceof Object ? { ...info } : {
     cls: 'terrains',
     id: 'none',
     noPass: false,
@@ -44,15 +47,19 @@ function getBlock(id, x, y, _addInfo, eventFloor) {
   const block = _tempInfo.cls === 'autotile'
     ? new Autotile(_tempInfo, x, y, _addInfo, eventFloor)
     : new BaseBlock(_tempInfo, x, y, _addInfo, eventFloor);
+  block._disable = disable;
   return block;
-}
-
-function getInfo(id) {
-  return getBlock(id).getInfo();
-}
-
-export {
-  getBlock,
-  getInfo,
-  BaseBlock,
 };
+
+Block.getInfo = function (id) {
+  if (id instanceof BaseBlock) return id.getInfo();
+  const block = this.get(id);
+  if (!block) return {};
+  return block.getInfo();
+};
+
+Block.isBlock = (block) => {
+  return block instanceof BaseBlock;
+};
+
+export default Block;

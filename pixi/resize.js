@@ -72,7 +72,7 @@ const resize = {
     const obj = this.init();
     this.resizeApp(obj);
     if (obj.isVerticalChange) {
-      pixi.scenes.doEmit('reLoc');
+      pixi.scenes.doEmit('reLoc', obj);
     }
   },
   resizeApp(obj) {

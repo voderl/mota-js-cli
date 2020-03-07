@@ -1,15 +1,50 @@
-import { Texture, Rectangle, TextStyle, Text } from 'pixi.js';
+import { Texture, Rectangle, TextStyle, Text, Graphics } from 'pixi.js';
+import utils from './utils';
+
+const font = {
+  default: new TextStyle({
+    TextStyle: 'normal',
+    fill: '#ffffff',
+    stroke: 'blue',
+    fontFamily: 'sans-serif',
+    strokeThickness: '2',
+    breakWords: 'true',
+  }),
+  getTextStyle(style, options) {
+    if (!options) {
+      if (style instanceof TextStyle) return style;
+      const newStyle = this.default.clone();
+      if (style instanceof Object) {
+        Object.keys(style).forEach(id => {
+          newStyle[`_${id}`] = style[id];
+        });
+      }
+      return newStyle;
+    }
+    if (!(style instanceof TextStyle)) return null;
+    const _newStyle = style.clone();
+    if (options instanceof Object) {
+      Object.keys(options).forEach(id => {
+        _newStyle[`_${id}`] = options[id];
+      });
+    }
+    return _newStyle;
+  },
+};
+
 
 const ui = {
-  fontStyle: {
-    default: new TextStyle({
-      fontStyle: 'normal',
-      fill: '#ffffff',
-      stroke: 'blue',
-      fontFamily: 'sans-serif',
-      strokeThickness: '2',
-      breakWords: 'true',
+  TextStyle: {
+    default: font.defaultTextStyle,
+    damage: font.getTextStyle({
+      fontWeight: 'bold',
+      fontSize: '11px',
+      textBaseline: 'alphabetic',
+      strokeThickness: 2,
     }),
+  },
+  getTextStyle(style, options) {
+    return font.getTextStyle(style, options);
   },
   getTexture(name) {
     const { textures } = window.pixi;
@@ -43,6 +78,7 @@ const ui = {
       texture.forEach(t => temp.push(this.split(t, dx, dy, dw, dh)));
       return temp;
     }
+    if (!(texture instanceof Texture)) return null;
     const {
       _frame, orig, trim, _rotate,
     } = texture;
@@ -126,26 +162,6 @@ const ui = {
     if (dh && _node.height !== dh) _node.height = dh;
     return _node;
   },
-  getTextStyle(style, options) {
-    if (!options) {
-      if (style instanceof TextStyle) return style;
-      const newStyle = this.fontStyle.default.clone();
-      if (style instanceof Object) {
-        Object.keys(style).forEach(id => {
-          newStyle[`_${id}`] = style[id];
-        });
-      }
-      return newStyle;
-    }
-    if (!(style instanceof TextStyle)) return null;
-    const _newStyle = style.clone();
-    if (options instanceof Object) {
-      Object.keys(options).forEach(id => {
-        _newStyle[`_${id}`] = options[id];
-      });
-    }
-    return _newStyle;
-  },
   drawText(scene, text, style, x, y, options = {}) {
     const newStyle = this.getTextStyle(style);
     const node = scene.addNode('text', {
@@ -153,13 +169,19 @@ const ui = {
       style: newStyle,
       disable: true,
     });
-    const { align } = options;
-    if (align) {
-      if (align === 'center') node.anchor.set(0.5, 0.5);
-      else if (align === 'left') node.anchor.set(0, 0.5);
+    const { anchor } = options;
+    if (anchor) {
+      node.anchor.set(anchor.x, anchor.y);
     }
     node.position.set(x, y);
     return node;
+  },
+  setMask(scene, style, zone = scene.container.zone) {
+    const graphics = new Graphics();
+    graphics.beginFill(utils.getColor(style));
+    graphics.drawRect(...zone);
+    graphics.endFill();
+    scene.container.mask = graphics;
   },
   moveHero(hero) {
     hero;

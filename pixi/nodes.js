@@ -59,6 +59,7 @@ _nodes.prototype.default = {
     return callback();
   },
   remove() {
+    if (this._destroyed) return;
     this.removing(() => {
       this._remove();
     });
@@ -204,7 +205,9 @@ nodes.register('text', {
     text,
     style,
   }) {
-    return new Renders.Text(text, style);
+    const node = new Renders.Text(text, style);
+    node.resolution = 2;
+    return node;
   },
 });
 nodes.register('sprite', {
@@ -315,6 +318,7 @@ nodes.register('border', {
       const [
         x, y, w, h,
       ] = zone;
+      console.log(zone);
       if (fillColor && !Number.isInteger(fillColor))fillColor = utils.getColor(fillColor);
       if (!Number.isInteger(lineColor))lineColor = utils.getColor(lineColor || main.borderColor);
       this.beginFill(fillColor, fillAlpha);
@@ -324,8 +328,7 @@ nodes.register('border', {
         this.drawRoundedRect(0, 0, w, h, radius);
       } else this.drawRect(0, 0, w, h);
       this.endFill();
-      this.x = x;
-      this.y = y;
+      this.position.set(x - lineWidth, y - lineWidth);
     });
     return true;
   },
@@ -335,9 +338,10 @@ nodes.register('zone', {
   init({
     zone,
     color = 0x0,
+    alpha = 0,
   }) {
     this.addListener('added', () => {
-      this.beginFill(utils.getColor(color));
+      this.beginFill(utils.getColor(color), alpha);
       if (!(zone instanceof Array)) {
         const t = this.parent.zone;
         console.log(this.parent);

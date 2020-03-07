@@ -1,5 +1,6 @@
 import loader from '../TexLoader';
 import utils from '../utils';
+import Scene from '../Scene';
 
 const { textures } = loader;
 
@@ -36,9 +37,20 @@ class BaseBlock {
     if (eventFloor) {
       this.addEvent((eventFloor.events || {})[`${x},${y}`]);
       const changeFloor = (eventFloor.changeFloor || {})[`${x},${y}`];
-      if (changeFloor) this.addEvent({ trigger: 'changeFloor', data: changeFloor });
+      if (changeFloor instanceof Object) {
+        this.addEvent({ trigger: 'changeFloor', data: changeFloor });
+      }
     }
-    return this;
+  }
+
+  get disable() {
+    return this._disable;
+  }
+
+  set disable(value) {
+    this._disable = value;
+    if (value) this.hide();
+    else this.show('event');
   }
 
   clone() {
@@ -67,12 +79,31 @@ class BaseBlock {
   drawTo(scene) {
     // 默认不给绘制方法以自定义, 如需可单独设置
     const { x, y } = this;
+    if (!(scene instanceof Scene)) {
+      scene = pixi.game.getScene(scene);
+      if (!(scene instanceof Scene)) return null;
+    }
     const node = scene.addNode('sprite', {
       texture: this.texture,
       disable: true,
     });
     node.position.set(x * 32 + 16 - node.width / 2, y * 32 + 32 - node.height);
+    this.sprite = node;
     return node;
+  }
+
+  show(scene) {
+    if (typeof scene === 'string') scene = pixi.game.getScene(scene);
+    if (scene instanceof Object) {
+      this.drawTo(this.scene);
+    }
+  }
+
+  hide() {
+    if (this.sprite instanceof Array) {
+      this.sprite.forEach((s) => s.remove());
+    } else if (this.sprite) this.sprite.remove();
+    delete this.sprite;
   }
 
   addEvent(event) {
@@ -106,6 +137,7 @@ class BaseBlock {
 
   destroy() {
     delete this.texture;
+    delete this.sprite;
     this.event = null;
     this.destroyed = true;
   }

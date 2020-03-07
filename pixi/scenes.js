@@ -16,8 +16,21 @@ const app = new Application({
 const scenes = new Scene('main', 'main', {
   container: app.stage,
 });
-scenes.addScene('statuBar', 'statusBar');
-scenes.addScene('toolBar', 'toolBar');
+const statusBar = scenes.addScene('statuBar', 'statusBar');
+statusBar.on('show', function() {
+  const { game, statusBar, toolBar } = pixi.resize.style;
+  this.addNode('border', {
+    zone: game,
+  });
+  this.addNode('border', {
+    zone: statusBar,
+  });
+  this.addNode('border', {
+    zone: toolBar,
+  });
+});
+const toolBar = scenes.addScene('toolBar', 'toolBar');
+
 const game = scenes.addScene('game', 'game');
 game.addScene(['bg', 'event', 'fg', 'damage']);
 
@@ -59,17 +72,19 @@ loading.show();
 game.on('show', function show() {
   const { textures } = window.pixi;
   /** draw Border */
-  this.addNode('border');
+  ui.setMask(this);
 });
 
 game.getScene('bg').on('show', function (floorId = core.status.floorId) {
   const { textures } = window.pixi;
-  const { width, height } = core.floors[floorId];
+  const { width, height } = core.bigmap;
   const groundId = (core.status.maps || core.floors)[floorId].defaultGround || 'ground';
   // add Bg
   const texture = textures[groundId];
   this.addNode('tilingSprite', {
     texture: texture || textures.ground,
+    width: width * 32,
+    height: height * 32,
   });
   // draw Floor Images
   // draw Blocks
@@ -85,6 +100,7 @@ game.getScene('event').on('show', function (floorId = core.status.floorId) {
   core.status.heroSprite = this.addNode('hero', {
     texture: pixi.textures.hero,
   });
+  core.drawHero();
 });
 game.getScene('fg').on('show', function (floorId = core.status.floorId) {
   maps.drawBgFgMap(this, floorId, 'fg');
@@ -92,19 +108,16 @@ game.getScene('fg').on('show', function (floorId = core.status.floorId) {
 game.getScene('damage').on('show', function (floorId = core.status.floorId) {
   if (core.status.gameOver) return;
   // if (!core.hasItem('book')) return;
-  const style = ui.getTextStyle({
-    fontWeight: 'bold',
-    fontSize: '11px',
-    textBaseline: 'alphabetic',
-    strokeThickness: 2,
-  });
   // draw_Damage
-  maps.drawDamage(this, style, floorId);
-  maps.drawExtraDamage(this, style, floorId);
+  maps.drawDamage(this, floorId);
+  maps.drawExtraDamage(this, floorId);
 });
 
-event.on('start', () => {
+event.on('drawMap', () => {
+  console.log('start');
   game.flash();
+  statusBar.flash();
+  toolBar.flash();
 });
 export {
   app,

@@ -1,6 +1,7 @@
-import { Container, Sprite, utils } from 'pixi.js';
+import { Container, Sprite, utils, DisplayObject } from 'pixi.js';
 import nodes from './nodes';
 import resize from './resize';
+import ui from './ui';
 
 const methods = {
   /** @this Container */
@@ -67,9 +68,9 @@ const methods = {
       container.position.set(zone[0], zone[1]);
       return;
     }
-    const {
+    const [
       x, y, w, h,
-    } = container.zone;
+    ] = container.zone;
     if (x !== zone[0]
       || y !== zone[1]) {
       container.position.set(zone[0], zone[1]);
@@ -77,6 +78,8 @@ const methods = {
     container.zone = zone;
     if (this.active && (w !== zone[2] || h !== zone[3])) {
       this.emit('flash');
+    } else if (this.container.mask !== null) {
+      ui.setMask(this);
     }
   },
   combinePosition(zone1, zone2) {
@@ -123,7 +126,6 @@ export default class Scene extends utils.EventEmitter {
     this.addListener('reLoc', methods.reLoc);
     this.container.addListener('childRemoved', methods.checkLength);
     if (zIndex) {
-      this.container.sortableChildren = true;
       this.container.zIndex = zIndex;
     }
     this.emit('reLoc');
@@ -156,7 +158,7 @@ export default class Scene extends utils.EventEmitter {
 
   addNode(type, options) {
     if (type instanceof Array) return type.forEach((item) => { this.addNode(item[0], item[1]); });
-    const node = nodes.getNode(type, options);
+    const node = type instanceof DisplayObject ? type : nodes.getNode(type, options);
     const { container } = this;
     if (node.zIndex !== 0 && !container.sortableChildren)container.sortableChildren = true;
     container.addChild(node);

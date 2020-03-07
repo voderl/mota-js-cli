@@ -13,10 +13,11 @@ import nodes from './nodes';
 import resize from './resize';
 
 
-import { getBlock, BaseBlock } from './libs/Block';
+import Block from './libs/Block';
 
 
 import './extend';
+import './update';
 
 window.$ = $;
 
@@ -36,8 +37,7 @@ const pixi = {
   scenes,
   maps,
   ui,
-  BaseBlock,
-  getBlock,
+  Block,
   utils,
   Easing: TWEEN.Easing.Quadratic.InOut,
   main: app.stage,

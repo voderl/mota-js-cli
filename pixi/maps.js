@@ -1,8 +1,9 @@
 import { Texture, Rectangle } from 'pixi.js';
 import event from './event';
 import nodes from './nodes';
-import { getBlock, BaseBlock } from './libs/Block';
+import Block from './libs/Block';
 import ui from './ui';
+import utils from './utils';
 
 // 在block里维护一系列数组，只有改变时才重新计算，
 // bg改变背景 bg fg没有图块
@@ -14,8 +15,8 @@ const maps = {
     return texture;
   },
   addBlock(scene, block, options) {
-    if (!(block instanceof BaseBlock)) {
-      block = getBlock(block, 0, 0);
+    if (!Block.isBlock(block)) {
+      block = Block.get(block, 0, 0);
     }
     const { texture, cls } = block;
     const node = block.drawTo(scene);
@@ -67,7 +68,7 @@ const maps = {
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
         if (arr[y][x] !== 0) {
-          const block = getBlock(arr[y][x], x, y);
+          const block = Block.get(arr[y][x], x, y);
           block.name = name;
           // --- 前景虚化
           if (eventArr != null && eventArr[y][x] !== 0) {
@@ -77,35 +78,42 @@ const maps = {
       }
     }
   },
-  drawDamage(scene, style, floorId = core.status.floorId) {
-    console.log(style);
+  drawOneDamage(scene, id, x, y, style = ui.TextStyle.damage, floorId = core.status.floorId) {
+    const anchor = { x: 0, y: 0.5 };
+    let damageNode;
+    let criticalNode;
+    if (core.flags.displayEnemyDamage) {
+      const { damage, color } = core.enemys.getDamageString(id, x, y, floorId);
+      damageNode = ui.drawText(scene, damage, ui.getTextStyle(style, {
+        fill: color,
+      }), 32 * x + 1, 32 * (y + 1) - 1, {
+        anchor,
+      });
+    }
+    if (core.flags.displayCritical) {
+      let critical = core.enemys.nextCriticals(id, 1, x, y, floorId);
+      critical = core.formatBigNumber((critical[0] || [])[0], true);
+      if (critical === '???') critical = '?';
+      criticalNode = ui.drawText(scene, critical, style, 32 * x + 1, 32 * (y + 1) - 11, {
+        anchor,
+      });
+    }
+    return [damageNode, criticalNode];
+  },
+  drawDamage(scene, floorId = core.status.floorId) {
+    const style = ui.TextStyle.damage;
     core.status.maps[floorId].blocks.forEach((block) => {
       if (!block.disable && block.event.cls.indexOf('enemy') === 0 && block.event.displayDamage !== false) {
-        const { x, y } = block;
-        if (core.flags.displayEnemyDamage) {
-          const damageString = core.enemys.getDamageString(block.event.id, x, y, floorId);
-          const { damage } = damageString;
-          const { color } = damageString;
-          ui.drawText(scene, damage, ui.getTextStyle(style, {
-            fill: color,
-          }), 32 * x + 1, 32 * (y + 1) - 1, {
-            align: 'left',
-          });
-          // core.fillBoldText(ctx, damage, 32 * x + 1, 32 * (y + 1) - 1, color);
-        }
-        if (core.flags.displayCritical) {
-          let critical = core.enemys.nextCriticals(block.event.id, 1, x, y, floorId);
-          critical = core.formatBigNumber((critical[0] || [])[0], true);
-          if (critical === '???') critical = '?';
-          ui.drawText(scene, critical, style, 32 * x + 1, 32 * (y + 1) - 11, {
-            align: 'left',
-          });
-          // core.fillBoldText(ctx, critical, 32 * x + 1, 32 * (y + 1) - 11, '#FFFFFF');
-        }
+        const { x, y, event: { id } } = block;
+        this.drawOneDamage(scene, id, x, y, style, floorId);
       }
     });
   },
-  drawExtraDamage(scene, style, floorId = core.status.floorId) {
+  drawExtraDamage(scene, floorId = core.status.floorId) {
+    const style = ui.getTextStyle(ui.TextStyle.damage, {
+      fill: '#FF7F00',
+    });
+    const anchor = { x: 0.5, y: 0.5 };
     if (core.flags.displayExtraDamage) {
       const { width, height } = core.floors[floorId];
       for (let x = 0; x < width; x++) {
@@ -113,21 +121,51 @@ const maps = {
           let damage = core.status.checkBlock.damage[`${x},${y}`] || 0;
           if (damage > 0) { // 该点伤害
             damage = core.formatBigNumber(damage, true);
-            ui.drawText(scene, damage, ui.getTextStyle(style, {
-              fill: '#FF7F00',
-            }), 32 * x + 16, 32 * (y + 1) - 14, {
-              align: 'center',
+            ui.drawText(scene, damage, style, 32 * x + 16, 32 * (y + 1) - 14, {
+              anchor,
             });
           } else if (core.status.checkBlock.ambush[`${x},${y}`]) { // 检查捕捉
-            ui.drawText(scene, '!', ui.getTextStyle(style, {
-              fill: '#FF7F00',
-            }), 32 * x + 16, 32 * (y + 1) - 14, {
-              align: 'center',
+            ui.drawText(scene, '!', style, 32 * x + 16, 32 * (y + 1) - 14, {
+              anchor,
             });
           }
         }
       }
     }
+  },
+  moveBlock(block, moveSteps, time, keep, callback) {
+    const scene = pixi.game.getScene('event');
+    const node = this.addBlock(scene, block);
+    window.node = node;
+    node.removing = keep
+      ? function (cb) {
+        const x = this.x / 32;
+        const y = this.y / 32;
+        core.setBlock(block.id, x, y);
+        core.showBlock(x, y);
+        cb();
+      }
+      : function (cb) {
+        this.changeTo({
+          alpha: 0,
+        }, 500, cb);
+      };
+    return this.moveBlockOneStep(node, moveSteps, time, callback);
+  },
+  moveBlockOneStep(node, moveSteps, time, callback) {
+    const dir = moveSteps.shift();
+    if (!dir) {
+      if (callback instanceof Function) callback();
+      node.remove();
+      return;
+    }
+    const scan = utils.scan[dir];
+    const obj = {};
+    obj.x = node.x + 32 * scan.x;
+    obj.y = node.y + 32 * scan.y;
+    node.changeTo(obj, time, () => {
+      this.moveBlockOneStep(node, moveSteps, time, callback);
+    });
   },
   clearMap() {
 
