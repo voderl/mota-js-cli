@@ -38,6 +38,7 @@ class Debounce {
   dirty(...args) {
     if (!this._dirty) {
       this._dirty = true;
+      this.args = args;
       dirty.push(this);
     }
   }
@@ -52,7 +53,10 @@ const Fresh = {
     if (dirty.length !== 0) {
       dirty.forEach(item => {
         item._dirty = false;
-        if (item instanceof Debounce) item.func();
+        if (item instanceof Debounce) {
+          item.func(...item.args);
+          delete item.args;
+        }
       });
       dirty = [];
     }

@@ -67,13 +67,28 @@ class BaseBlock {
   }
 
   getInfo() {
-    return {
+    const info = {
       number: this.event.number,
+      name: this.name,
       id: this.event.id,
       cls: this.event.cls,
       texture: this.texture,
       faceIds: this.event.faceIds || {},
     };
+    const { id, cls } = info;
+    if (cls.startsWith('enemy')) {
+      if (core.material.enemys[id]) {
+        info.name = core.material.enemys[id].name;
+      }
+    } else if (cls.startsWith('item')) {
+      if (core.material.items[id]) {
+        info.name = core.material.items[id].name;
+      }
+    }
+    if (this.texture) {
+      info.height = this.texture instanceof Array ? this.texture[0].height : this.texture.height;
+    }
+    return info;
   }
 
   drawTo(scene) {

@@ -1,4 +1,4 @@
-import { Texture, Rectangle } from 'pixi.js';
+import { Texture, Rectangle } from 'pixi.js-legacy';
 import event from './event';
 import nodes from './nodes';
 import Block from './libs/Block';
@@ -20,9 +20,7 @@ const maps = {
     }
     const { texture, cls } = block;
     const node = block.drawTo(scene);
-    if (node instanceof Array) {
-      node.forEach(_node => Object.assign(node, options));
-    }
+    Object.assign(node, options);
     return node;
   },
   drawImage(scene, name, dx, dy, dw, dh, x, y, w, h) {
@@ -116,6 +114,9 @@ const maps = {
     const anchor = { x: 0.5, y: 0.5 };
     if (core.flags.displayExtraDamage) {
       const { width, height } = core.floors[floorId];
+      const { checkBlock } = core.status;
+      checkBlock.damage = checkBlock.damage || {};
+      checkBlock.ambush = checkBlock.ambush || {};
       for (let x = 0; x < width; x++) {
         for (let y = 0; y < height; y++) {
           let damage = core.status.checkBlock.damage[`${x},${y}`] || 0;

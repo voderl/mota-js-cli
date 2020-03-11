@@ -85,5 +85,12 @@ const utils = {
       }, delay);
     };
   },
+  parseName(name) {
+    const index = name.lastIndexOf('.');
+    if (index >= 0) {
+      return [name.slice(0, index), name.slice(index + 1)];
+    }
+    return [name];
+  },
 };
 export default utils;

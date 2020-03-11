@@ -8,6 +8,8 @@
 + test ： 一些测试工作  
 ## 当前进度：
 （画面显示正在进行中...已完成bg、event、hero、fg、damage）  
+(中途飘了，妄图改动所有的ui，导致一度负进度)  
+（目前初步完成部分ui的实现）
 ![进度图](./nodeControl/images/progress.png) 
 
 ## 已完成，待优化：

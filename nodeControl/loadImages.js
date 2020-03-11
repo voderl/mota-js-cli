@@ -73,7 +73,7 @@ async function loadImages() {
   const { main } = global;
   const _root = main.images;
   main.imagesDir = imagesDir;
-  main.rawImages.push('hero.png', 'ground.png');
+  main.rawImages.push('hero.png', 'ground.png', 'snowNode.png');
   await readAll([
     [_root, materials],
     [_root.autotile, main.autotiles],

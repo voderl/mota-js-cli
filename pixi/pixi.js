@@ -1,8 +1,9 @@
-import * as $ from 'pixi.js';
+import * as $ from 'pixi.js-legacy';
 import TWEEN from '@tweenjs/tween.js';
 import Fresh from './libs/Fresh';
 
 import loader from './TexLoader';
+import weather from './weather';
 import { app, scenes, game } from './scenes';
 import event from './event';
 import maps from './maps';
@@ -12,19 +13,22 @@ import ui from './ui';
 import nodes from './nodes';
 import resize from './resize';
 
-
 import Block from './libs/Block';
 
-
+import './scenes/game';
+import './scenes/changeFloor';
+import './scenes/toolBar';
+import './scenes/statusBar';
+import './libs/Animate';
 import './extend';
 import './update';
 
 window.$ = $;
 
 app.ticker.add(() => {
+  Fresh.update();
   TWEEN.update();
   nodes.update();
-  Fresh.update();
 });
 const pixi = {
   TWEEN,
@@ -39,6 +43,8 @@ const pixi = {
   ui,
   Block,
   utils,
+  weather,
+  canvasRenderer: new $.CanvasRenderer(),
   Easing: TWEEN.Easing.Quadratic.InOut,
   main: app.stage,
   ticker: app.ticker,

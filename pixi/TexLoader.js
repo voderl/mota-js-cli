@@ -1,7 +1,7 @@
-import * as $ from 'pixi.js';
+import * as $ from 'pixi.js-legacy';
 import TWEEN from '@tweenjs/tween.js';
-
 import event from './event';
+import loading from './scenes/loading';
 import ui from './ui';
 
 // 加载过程中的进度条缓动特效
@@ -31,6 +31,7 @@ class TexLoader {
 
   start() {
     this.loadPacker(this.packer);
+    loading.show(this);
   }
 
   static parseName(name) {
@@ -140,5 +141,6 @@ class TexLoader {
 }
 const mainPacker = require.context('./../nodeControl/data/', false, /(png|json|jpg|ico|gif|svg)$/);
 const loader = new TexLoader(mainPacker);
+
 loader.start();
 export default loader;

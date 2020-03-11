@@ -7,7 +7,7 @@ module.exports = merge(common, {
   mode: 'development',
   devtool: 'inline-source-map',
   devServer: {
-    contentBase: path.join(__dirname, 'test'),
+    contentBase: path.join(__dirname, 'test2'),
     // hot: true,
     open: true,
   },
@@ -16,9 +16,9 @@ module.exports = merge(common, {
   ],
   output: {
     publicPath: '',
-    filename: '[name].bundle.js',
-    chunkFilename: '[name].bundle.js',
-    path: path.resolve(__dirname, 'test'),
+    filename: '[name].[hash].bundle.js',
+    chunkFilename: '[name].[hash].bundle.js',
+    path: path.resolve(__dirname, 'test2'),
   },
   module: {
     rules: [{

@@ -207,6 +207,7 @@ loadImages().then(() => {
       img.blit(image, 0, 0, posX * 32, posY * height, 32 * animate, height)
         .getBuffer(Jimp.MIME_PNG, (err, buffer) => {
           if (err) throw err;
+          if (blocksBuffer[id]) console.log(`额外图片里有重名id"${id}"`);
           blocksBuffer[id] = buffer;
         });
     });
@@ -254,6 +255,7 @@ loadImages().then(() => {
         if (id.lastIndexOf('.') !== -1) {
           basename = id.substring(0, id.lastIndexOf('.'));
         }
+        if (blocksBuffer[basename]) console.log(`额外图片里有重名id${basename}`)
         blocksBuffer[basename] = imageBuffer;
       });
     });

@@ -1,15 +1,24 @@
-import { Texture, Rectangle, TextStyle, Text, Graphics } from 'pixi.js';
+import {
+  Texture, Rectangle, TextStyle, Text, Graphics,
+} from 'pixi.js-legacy';
 import utils from './utils';
 
 const font = {
   default: new TextStyle({
-    TextStyle: 'normal',
+    fontStyle: 'normal',
     fill: '#ffffff',
     stroke: 'blue',
     fontFamily: 'sans-serif',
-    strokeThickness: '2',
-    breakWords: 'true',
+    strokeThickness: 2,
+    breakWords: true,
   }),
+  calText(text, style, options) {
+    const realStyle = this.getTextStyle(style, options);
+    const node = new Text(text, realStyle);
+    const { width, height } = node;
+    node.destroy();
+    return { width, height };
+  },
   getTextStyle(style, options) {
     if (!options) {
       if (style instanceof TextStyle) return style;
@@ -21,7 +30,7 @@ const font = {
       }
       return newStyle;
     }
-    if (!(style instanceof TextStyle)) return null;
+    if (!(style instanceof TextStyle)) return this.default.clone();
     const _newStyle = style.clone();
     if (options instanceof Object) {
       Object.keys(options).forEach(id => {
@@ -42,6 +51,24 @@ const ui = {
       textBaseline: 'alphabetic',
       strokeThickness: 2,
     }),
+    tip: font.getTextStyle({
+      fontWeight: 'normal',
+      fontSize: '16px',
+      textBaseline: 'alphabetic',
+      strokeThickness: 0,
+    }),
+    main: font.getTextStyle({
+      fill: 'white',
+      strokeThickness: 0,
+    }),
+    statusBar: font.getTextStyle({
+      fontSize: '20px',
+      textBaseline: 'bottom',
+    }),
+    toolBar: font.getTextStyle(),
+  },
+  calText(...args) {
+    return font.calText(...args);
   },
   getTextStyle(style, options) {
     return font.getTextStyle(style, options);
@@ -50,6 +77,13 @@ const ui = {
     const { textures } = window.pixi;
     const texture = name instanceof Texture ? name : (textures[name] || textures.error);
     return texture;
+  },
+  getTextureHeight(texture) {
+    if (texture instanceof Texture) return texture.height;
+    if (texture instanceof Array && texture[0] instanceof Texture) {
+      return texture[0].height;
+    }
+    return null;
   },
   /**
    * 将一个texture分割成对象或数组
@@ -140,9 +174,19 @@ const ui = {
     }
     return result;
   },
+  getHeroTexture(fullName, direction = 'down') {
+    const [name, ext] = utils.parseName(fullName);
+    const hero = this.getTexture(name);
+    if (hero instanceof Texture) {
+      const temp = this.splitTexture(hero, ['down', 'left', 'right', 'up'], 4);
+      pixi.textures[name] = temp;
+      return temp[direction][0];
+    }
+    return hero[direction][0];
+  },
   drawImage(scene, texture, dx, dy, dw, dh, x, y, w, h) {
     if (typeof texture === 'string') texture = this.getTexture(texture);
-    if (arguments.length > 5) {
+    if (arguments.length > 6) {
       const node = scene.addNode('sprite', {
         texture: this.split(texture, dx, dy, dw, dh),
         disable: true,
@@ -176,6 +220,9 @@ const ui = {
     node.position.set(x, y);
     return node;
   },
+  drawTip() {
+
+  },
   setMask(scene, style, zone = scene.container.zone) {
     const graphics = new Graphics();
     graphics.beginFill(utils.getColor(style));
@@ -189,7 +236,7 @@ const ui = {
   getHeroDrawObj() {
     const heroIconArr = core.material.icons.hero;
     const drawObjs = [];
-    const hero = core.status.hero;
+    const { hero } = core.status;
     let index = 0;
     drawObjs.push({
       sprite: this.getTexture('hero'),
@@ -239,6 +286,23 @@ const ui = {
       return [top, right, bottom, left];
     }
     return [0, 0, 0, 0];
+  },
+  center(node, x, y, width, height, options = {}) {
+    const [left, right, bottom, top] = this.getPadding(options.padding);
+    x += left, y += top, width = width - left - right, height = height - top - bottom;
+    let ratio = Math.min(height / node.height, width / node.width);
+    if (options.maxRatio)ratio = Math.min(ratio, options.maxRatio);
+    if (options.minRatio) {
+      ratio = Math.max(ratio, options.minRatio);
+    }
+    node.scale.set(ratio, ratio);
+    if (node.anchor) {
+      node.anchor.set(0.5, 0.5);
+      node.position.set(x + width / 2, y + height / 2);
+      return;
+    }
+    node.x = x + width / 2 - node.width / 2;
+    node.y = y + height / 2 - node.height / 2;
   },
 };
 export default ui;

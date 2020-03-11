@@ -1,4 +1,4 @@
-import { utils } from 'pixi.js';
+import { utils } from 'pixi.js-legacy';
 import Fresh from './libs/Fresh';
 
 class Event extends utils.EventEmitter {

@@ -26,9 +26,11 @@ module.exports = {
     'no-shadow': 1,
     'no-param-reassign': 1,
     'prefer-rest-params':0,
-    'func-names': 1,
+    'func-names': ["error", "as-needed"],
     'no-undef': 1,
     'no-trailing-spaces': ["error", { "ignoreComments": true }],
     "max-classes-per-file": ["error", 2],
+    'prefer-arrow-callback': 1,
+
   },
 };

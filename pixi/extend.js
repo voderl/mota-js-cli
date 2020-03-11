@@ -2,6 +2,7 @@
   * 一些给某些原型加入的拓展方法
 */
 import TWEEN from '@tweenjs/tween.js';
+import { BaseTexture, resources, Texture } from 'pixi.js-legacy';
 
 /** 拓展TWEEN的destroy方法，在node（节点sprite）destroy时tween也destroy */
 TWEEN.Tween.prototype.destroy = function () {
@@ -14,3 +15,26 @@ TWEEN.Tween.prototype.destroy = function () {
   this._valuesEnd = null;
   this._easingFunction = null;
 };
+
+/**
+ * Black Texture
+ */
+function createBlackTexture() {
+  const canvas = document.createElement('canvas');
+
+  canvas.width = 16;
+  canvas.height = 16;
+
+  const context = canvas.getContext('2d');
+
+  context.fillStyle = 'black';
+  context.fillRect(0, 0, 16, 16);
+
+  return new Texture(new BaseTexture(new resources.CanvasResource(canvas)));
+}
+Texture.BLACK = createBlackTexture();
+// BaseTexture.prototype.getDrawableSource = function getDrawableSource() {
+//   const { resource } = this;
+
+//   return resource ? (resource.bitmap || resource.source) : this.source;
+// };

@@ -2,7 +2,6 @@ import BaseBlock from './BaseBlock';
 import event from '../event';
 import ui from '../ui';
 
-let tempData = [];
 const draw = {
   _drawAutotile(scene, mapArr, block, size = 32, left = 0, top = 0) {
     const { x: xx, y: yy, texture: autotile } = block;
@@ -42,37 +41,36 @@ const draw = {
   },
   _drawAutotile_getAutotileAroundId(currId, x, y, mapArr) {
     if (x < 0 || y < 0 || x >= mapArr[0].length || y >= mapArr.length) return 1;
-    return core.material.autotileEdges[currId].indexOf(mapArr[y][x]) >= 0;
+    // return core.material.autotileEdges[currId].indexOf(mapArr[y][x]) >= 0;
+    return currId === mapArr[y][x];
   },
   _drawAutotile_render(scene, x, y, size, autotile, status, index, done) {
-    const indexData = [[[96 * status, 0, 32, 32, x, y, size, size]],
-      [[96 * status, 3 * 32, 16, 32, x, y, size / 2, size], [96 * status + 2 * 32 + 16, 3 * 32, 16, 32, x + size / 2, y, size / 2, size]],
-      [[96 * status + 2 * 32, 32, 32, 16, x, y, size, size / 2], [96 * status + 2 * 32, 3 * 32 + 16, 32, 16, x, y + size / 2, size, size / 2]],
-      [[96 * status + 2 * 32, 3 * 32, 32, 32, x, y, size, size]],
-      [[96 * status, 32, 16, 32, x, y, size / 2, size], [96 * status + 2 * 32 + 16, 32, 16, 32, x + size / 2, y, size / 2, size]],
-      [[96 * status, 2 * 32, 16, 32, x, y, size / 2, size], [96 * status + 2 * 32 + 16, 2 * 32, 16, 32, x + size / 2, y, size / 2, size]],
-      [[96 * status + 2 * 32, 32, 32, 32, x, y, size, size]],
-      [[96 * status + 2 * 32, 2 * 32, 32, 32, x, y, size, size]],
-      [[96 * status, 32, 32, 16, x, y, size, size / 2], [96 * status, 3 * 32 + 16, 32, 16, x, y + size / 2, size, size / 2]],
-      [[96 * status, 3 * 32, 32, 32, x, y, size, size]],
-      [[96 * status + 32, 32, 32, 16, x, y, size, size / 2], [96 * status + 32, 3 * 32 + 16, 32, 16, x, y + size / 2, size, size / 2]],
-      [[96 * status + 32, 3 * 32, 32, 32, x, y, size, size]],
-      [[96 * status, 32, 32, 32, x, y, size, size]],
-      [[96 * status, 2 * 32, 32, 32, x, y, size, size]],
-      [[96 * status + 32, 32, 32, 32, x, y, size, size]],
-      [[96 * status + 32, 2 * 32, 32, 32, x, y, size, size]],
-      [[96 * status + 2 * 32, 0, 16, 16, x, y, size / 2, size / 2]],
-      [[96 * status + 2 * 32 + 16, 0, 16, 16, x, y, size / 2, size / 2]],
-      [[96 * status + 2 * 32 + 16, 16, 16, 16, x, y, size / 2, size / 2]],
-      [[96 * status + 2 * 32, 16, 16, 16, x, y, size / 2, size / 2]],
+    const indexData = [[[0, 0, 32, 32, x, y, size, size]],
+      [[0, 3 * 32, 16, 32, x, y, size / 2, size], [0 + 2 * 32 + 16, 3 * 32, 16, 32, x + size / 2, y, size / 2, size]],
+      [[0 + 2 * 32, 32, 32, 16, x, y, size, size / 2], [0 + 2 * 32, 3 * 32 + 16, 32, 16, x, y + size / 2, size, size / 2]],
+      [[0 + 2 * 32, 3 * 32, 32, 32, x, y, size, size]],
+      [[0, 32, 16, 32, x, y, size / 2, size], [0 + 2 * 32 + 16, 32, 16, 32, x + size / 2, y, size / 2, size]],
+      [[0, 2 * 32, 16, 32, x, y, size / 2, size], [0 + 2 * 32 + 16, 2 * 32, 16, 32, x + size / 2, y, size / 2, size]],
+      [[0 + 2 * 32, 32, 32, 32, x, y, size, size]],
+      [[0 + 2 * 32, 2 * 32, 32, 32, x, y, size, size]],
+      [[0, 32, 32, 16, x, y, size, size / 2], [0, 3 * 32 + 16, 32, 16, x, y + size / 2, size, size / 2]],
+      [[0, 3 * 32, 32, 32, x, y, size, size]],
+      [[0 + 32, 32, 32, 16, x, y, size, size / 2], [0 + 32, 3 * 32 + 16, 32, 16, x, y + size / 2, size, size / 2]],
+      [[0 + 32, 3 * 32, 32, 32, x, y, size, size]],
+      [[0, 32, 32, 32, x, y, size, size]],
+      [[0, 2 * 32, 32, 32, x, y, size, size]],
+      [[0 + 32, 32, 32, 32, x, y, size, size]],
+      [[0 + 32, 2 * 32, 32, 32, x, y, size, size]],
+      [[0 + 2 * 32, 0, 16, 16, x, y, size / 2, size / 2]],
+      [[0 + 2 * 32 + 16, 0, 16, 16, x, y, size / 2, size / 2]],
+      [[0 + 2 * 32 + 16, 16, 16, 16, x, y, size / 2, size / 2]],
+      [[0 + 2 * 32, 16, 16, 16, x, y, size / 2, size / 2]],
     ];
     const data = indexData[index];
     if (index >= 16) { // 拐角直接绘制
-      tempData.push(
-        ui.drawImage(scene, autotile,
-          data[0][0], data[0][1], data[0][2], data[0][3],
-          data[0][4], data[0][5], size / 2, size / 2),
-      );
+      ui.drawImage(scene, autotile,
+        data[0][0], data[0][1], data[0][2], data[0][3],
+        data[0][4], data[0][5], size / 2, size / 2);
     } else { // 非拐角要根据是否已经绘制进行切分后绘制
       this._drawAutotile_renderCut(scene, autotile, x, y, size, data, done);
     }
@@ -111,19 +109,19 @@ const draw = {
     }
     for (var i = 0; i < 4; i++) {
       const dt = drawData[i]; if (!dt) continue;
-      tempData.push(
-        ui.drawImage(scene, autotile, dt[0], dt[1], 16, 16, x + (i % 2) * size / 2, y + parseInt(i / 2) * size / 2, size / 2, size / 2),
-      );
+      ui.drawImage(scene, autotile, dt[0], dt[1], 16, 16, x + (i % 2) * size / 2, y + parseInt(i / 2) * size / 2, size / 2, size / 2);
     }
   },
 };
 
 class Autotile extends BaseBlock {
   drawTo(scene) {
-    tempData = [];
+    const node = scene.addNode('sprite', {
+      disable: true,
+    });
     const arr = event.fresh(scene.id);
-    draw._drawAutotile(scene, arr, this);
-    return tempData;
+    draw._drawAutotile(node, arr, this);
+    return node;
   }
 }
 export default Autotile;

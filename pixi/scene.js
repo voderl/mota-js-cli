@@ -1,4 +1,6 @@
-import { Container, Sprite, utils, DisplayObject } from 'pixi.js';
+import {
+  Container, Sprite, utils, DisplayObject,
+} from 'pixi.js-legacy';
 import nodes from './nodes';
 import resize from './resize';
 import ui from './ui';
@@ -6,8 +8,13 @@ import ui from './ui';
 const methods = {
   /** @this Container */
   checkLength() {
-    if (this.children.length === 0 && !this.scene.flashing) {
-      if (this.parent) this.parent.removeChild(this);
+    if (this.children.length === 0) {
+      if (this.parent
+        && !this.scene.constant
+        && !this.scene.flashing) {
+        this.parent.removeChild(this);
+        this.scene.nodes = [];
+      }
       if (this.scene.hideCallback instanceof Function) this.scene.hideCallback();
     }
   },
@@ -26,7 +33,10 @@ const methods = {
     console.log(`flash ${this.id}`);
     this.flashing = false;
   },
-  /** @this Scene */
+  /**
+   * 
+   * @param {function} callback - 只有当node删除到0时才能执行，如果删除中再增加node将不会执行
+   */
   hide(callback) {
     this.hideCallback = callback;
     console.log(`hide ${this.id}`);
@@ -105,6 +115,7 @@ export default class Scene extends utils.EventEmitter {
   constructor(id, resizeType, {
     container,
     parent = null,
+    constant = false,
     position,
     zIndex,
   } = { }) {
@@ -113,6 +124,7 @@ export default class Scene extends utils.EventEmitter {
     this.disable = false;
     this.stopPropagation = false;
     this.flashing = false;
+    this.constant = constant;
     this.resizeType = resizeType;
     this.position = position;
     this.container = container || new Container();
@@ -126,13 +138,13 @@ export default class Scene extends utils.EventEmitter {
     this.addListener('reLoc', methods.reLoc);
     this.container.addListener('childRemoved', methods.checkLength);
     if (zIndex) {
+      if (this.paren && !this.parent.container.sortableChildren) this.parent.container.sortableChildren = true;
       this.container.zIndex = zIndex;
     }
     this.emit('reLoc');
   }
 
   get active() {
-    if (this.inRoot) return true;
     return this.container.parent !== null;
   }
 
@@ -140,12 +152,13 @@ export default class Scene extends utils.EventEmitter {
     return (this.parent) && this.parent.parent === null;
   }
 
-  addScene(id, resizeType, position) {
-    if (id instanceof Array) return id.forEach(_id => this.addScene(_id));
-    position = methods.combinePosition(this.position, position);
+  addScene(id, resizeType, options = {}) {
+    if (id instanceof Array) return id.forEach(_id => this.addScene(_id, resizeType, options));
+    const position = methods.combinePosition(this.position, options.position);
     const temp = new Scene(id, resizeType || this.resizeType, {
-      position,
+      ...options,
       parent: this,
+      position,
     });
     this.children.push(temp);
     return temp;
@@ -156,23 +169,35 @@ export default class Scene extends utils.EventEmitter {
     if (index > -1) this.children.splice(index, 1);
   }
 
+  // fillRect(x, y, w, h, options) {
+  //   const data = {
+  //     zone: [x, y, w, h],
+  //   };
+  //   return this.addNode('rect', Object.assign(data, options));
+  // }
+
   addNode(type, options) {
     if (type instanceof Array) return type.forEach((item) => { this.addNode(item[0], item[1]); });
     const node = type instanceof DisplayObject ? type : nodes.getNode(type, options);
     const { container } = this;
-    if (node.zIndex !== 0 && !container.sortableChildren)container.sortableChildren = true;
+    if (container.parent === null) {
+      if (this.parent !== null) this.parent.container.addChild(container);
+    }
+    if (node.zIndex !== 0 && !container.sortableChildren) container.sortableChildren = true;
     container.addChild(node);
     this.nodes.push(node);
     return node;
   }
 
-  getScene(id) {
+  getScene(id, limit, depth = 0) {
+    if (id instanceof Scene || id instanceof DisplayObject) return id;
     if (this.id === id) return this;
+    if (limit && depth >= limit) return false;
     const { children } = this;
     const len = children.length;
     let temp;
     for (let i = 0; i < len; i++) {
-      temp = children[i].getScene(id);
+      temp = children[i].getScene(id, limit, depth + 1);
       if (temp instanceof Scene) return temp;
     }
     return false;
