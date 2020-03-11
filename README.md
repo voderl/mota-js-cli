@@ -1,5 +1,5 @@
 # [mota-js](https://github.com/ckcz123/mota-js)
-使用[`pixijs`](https://github.com/pixijs/pixi.js) 和 [`tween.js`](https://github.com/tweenjs/tween.js) 和 es6 
+使用[`pixijs`](https://github.com/pixijs/pixi.js) 和 [`tween.js`](https://github.com/tweenjs/tween.js) 和 webpack 
 
 ## 目录详情：
 + mota-js ：主程序 [mota-js](https://github.com/ckcz123/mota-js)
@@ -9,7 +9,8 @@
 ## 当前进度：
 （画面显示正在进行中...已完成bg、event、hero、fg、damage）  
 (中途飘了，妄图改动所有的ui，导致一度负进度)  
-（目前初步完成部分ui的实现）
+（目前初步完成部分ui的实现）  
+（下一目标，删除大量dom，只剩pixi的canvas和ui的canvas）；  
 ![进度图](./nodeControl/images/progress.png) 
 
 ## 已完成，待优化：
