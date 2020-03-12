@@ -240,36 +240,51 @@ toolBar.on('show', function () {
   const { useButton } = toolBar;
   const { icons } = core.statusBar;
   const { zone } = this.container;
+  let arr;
   if (useButton) {
-    ['btn1', 'btn2', 'btn3', 'btn4', 'btn5', 'btn6', 'btn7', 'btn8'].forEach((t, i) => {
-      nodesList[t] = toolBar.addNode('sprite', {
-        texture: icons[t],
-        data: getData(i),
-        event: {
-          pointerdown: events[t],
-        },
-      });
+    arr = ['btn1', 'btn2', 'btn3', 'btn4', 'btn5', 'btn6', 'btn7', 'btn8'];
+  } else if (resize.style.isVertical) arr = ['book', 'fly', 'toolbox', 'keyboard', 'shop', 'save', 'load', 'settings'];
+  else arr = ['book', 'fly', 'toolbox', 'save', 'load', 'settings'];
+  // TODO:
+  // hard 字样占两个
+  const len = arr.length + 2;
+  const col = resize.style.isVertical ? len : 3;
+  const row = Math.ceil(len / col);
+
+  const width = resize.style.toolBar[2] / col;
+  const height = resize.style.toolBar[3] / row;
+  const anchor = { x: 0.5, y: 0.5 };
+  let x = 0;
+  let y = - height / 2;
+  arr.forEach((t, i) => {
+    x += width;
+    if (i % col === 0) {
+      x = width / 2;
+      y += height;
+    }
+    nodesList[t] = toolBar.addNode('sprite', {
+      texture: icons[t],
+      data: {
+        x,
+        y,
+        anchor,
+      },
+      event: {
+        pointerdown: events[t],
+      },
     });
-  } else {
-    let arr;
-    if (resize.style.isVertical) arr = ['book', 'fly', 'toolbox', 'keyboard', 'shop', 'save', 'load', 'settings'];
-    else arr = ['book', 'fly', 'toolbox', 'shop', 'save', 'load', 'settings'];
-    arr.forEach((t, i) => {
-      nodesList[t] = toolBar.addNode('sprite', {
-        texture: icons[t],
-        data: getData(i),
-        event: {
-          pointerdown: events[t],
-        },
-      });
-    });
+  });
+  x += width / 2;
+  y -= height / 2;
+  if (x + 2 * width > col * width) {
+    x = width / 2;
+    y += height;
   }
-  const left = style.width * 8;
   window.text = toolBar.addNode('text', {
     text: core.status.hard,
     style: style.fontStyle,
     start() {
-      ui.center(this, left, 0, zone[2] - left, zone[3], {
+      ui.center(this, x, y, 2 * width, height, {
         maxRatio: 1,
       });
     },

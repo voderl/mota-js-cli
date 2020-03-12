@@ -9,7 +9,7 @@ const font = {
     fill: '#ffffff',
     stroke: 'blue',
     fontFamily: 'sans-serif',
-    strokeThickness: 2,
+    strokeThickness: 1,
     breakWords: true,
   }),
   calText(text, style, options) {
@@ -63,10 +63,11 @@ const ui = {
     }),
     statusBar: font.getTextStyle({
       fontSize: '20px',
-      textBaseline: 'bottom',
+      textBaseline: 'alphabetic',
     }),
     toolBar: font.getTextStyle(),
   },
+  // TODO: drawTip
   calText(...args) {
     return font.calText(...args);
   },
@@ -220,6 +221,9 @@ const ui = {
     node.position.set(x, y);
     return node;
   },
+  drawRoute(steps) {
+    console.log(steps);
+  },
   drawTip() {
 
   },
@@ -258,8 +262,10 @@ const ui = {
     });
   },
   setLoc(node, dx, dy, x, y, zone) {
-    if (!node.parent) return;
-    zone = zone || node.parent.zone;
+    if (!zone) {
+      if (!node.parent) return;
+      zone = zone || node.parent.zone;
+    }
     if (node.anchor)node.anchor.set(0, 0);
     if (!Number.isInteger(dx))dx *= node.width;
     if (!Number.isInteger(dy))dy *= node.height;
@@ -287,8 +293,40 @@ const ui = {
     }
     return [0, 0, 0, 0];
   },
+  fitZone(node, zone, type = 'center', options = {}) {
+    let [x, y, w, h] = zone;
+    const [top, right, bottom, left] = this.getPadding(options.padding);
+    x += left;
+    y += top;
+    w -= left + right;
+    h -= top + bottom;
+    let ratio = Math.min(h / node.height, w / node.width);
+    if (options.maxRatio)ratio = Math.min(ratio, options.maxRatio);
+    if (options.minRatio) {
+      ratio = Math.max(ratio, options.minRatio);
+    }
+    node.scale.set(ratio, ratio);
+    if (type instanceof Array) {
+      return this.setPosition(node, [x, y, w, h], ...type);
+    }
+    const value = {
+      center: [0.5, 0.5],
+      left: [0, 0.5],
+      right: [1, 0.5],
+      top: [0.5, 0],
+      bottom: [0.5, 1],
+    };
+    const arr = value[type];
+    if (!arr) throw new Error('应填数组或center、left、right、top、bottom');
+    return this.setPosition(node, [x, y, w, h], ...arr);
+  },
+  setPosition(node, zone, anchorX, anchorY, dw = anchorX, dh = anchorY) {
+    const [x, y, w, h] = zone;
+    node.anchor.set(anchorX, anchorY);
+    node.position.set(x + w * dw, y + h * dh);
+  },
   center(node, x, y, width, height, options = {}) {
-    const [left, right, bottom, top] = this.getPadding(options.padding);
+    const [top, right, bottom, left] = this.getPadding(options.padding);
     x += left, y += top, width = width - left - right, height = height - top - bottom;
     let ratio = Math.min(height / node.height, width / node.width);
     if (options.maxRatio)ratio = Math.min(ratio, options.maxRatio);

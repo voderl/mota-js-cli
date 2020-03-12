@@ -78,13 +78,12 @@ const maps = {
   },
   drawOneDamage(scene, id, x, y, style = ui.TextStyle.damage, floorId = core.status.floorId) {
     const anchor = { x: 0, y: 0.5 };
-    let damageNode;
-    let criticalNode;
+    const node = scene.addNode('sprite');
     if (core.flags.displayEnemyDamage) {
       const { damage, color } = core.enemys.getDamageString(id, x, y, floorId);
-      damageNode = ui.drawText(scene, damage, ui.getTextStyle(style, {
+      ui.drawText(node, damage, ui.getTextStyle(style, {
         fill: color,
-      }), 32 * x + 1, 32 * (y + 1) - 1, {
+      }), 1, 31, {
         anchor,
       });
     }
@@ -92,11 +91,12 @@ const maps = {
       let critical = core.enemys.nextCriticals(id, 1, x, y, floorId);
       critical = core.formatBigNumber((critical[0] || [])[0], true);
       if (critical === '???') critical = '?';
-      criticalNode = ui.drawText(scene, critical, style, 32 * x + 1, 32 * (y + 1) - 11, {
+      ui.drawText(node, critical, style, 1, 21, {
         anchor,
       });
     }
-    return [damageNode, criticalNode];
+    node.position.set(32 * x, 32 * y);
+    return node;
   },
   drawDamage(scene, floorId = core.status.floorId) {
     const style = ui.TextStyle.damage;
@@ -156,8 +156,8 @@ const maps = {
   moveBlockOneStep(node, moveSteps, time, callback) {
     const dir = moveSteps.shift();
     if (!dir) {
-      if (callback instanceof Function) callback();
       node.remove();
+      if (callback instanceof Function) callback();
       return;
     }
     const scan = utils.scan[dir];

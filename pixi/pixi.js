@@ -44,6 +44,7 @@ const pixi = {
   Block,
   utils,
   weather,
+  interaction: app.renderer.plugins.interaction,
   canvasRenderer: new $.CanvasRenderer(),
   Easing: TWEEN.Easing.Quadratic.InOut,
   main: app.stage,

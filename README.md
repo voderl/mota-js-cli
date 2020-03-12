@@ -6,10 +6,12 @@
 + pixi ：pixi.js的引入和部分使用
 + nodeControl ： 用node.js做的一些格式化处理，和预先处理
 + test ： 一些测试工作  
+  `npm run start` 开启工程
 ## 当前进度：
-（画面显示正在进行中...已完成bg、event、hero、fg、damage）  
+(resize之后天气消失)
 (中途飘了，妄图改动所有的ui，导致一度负进度)  
-（目前初步完成部分ui的实现）  
+（目前初步完成部分ui的实现，存读档还有浏览地图较难实现）
+（TODO：drawTip，route ui的优化）
 （下一目标，删除大量dom，只剩pixi的canvas和ui的canvas）；  
 ![进度图](./nodeControl/images/progress.png) 
 

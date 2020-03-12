@@ -189,7 +189,8 @@ _nodes.prototype.getNode = function (type, options = {}) {
     node = typeData.Render(this.Renders, options);
   } else node = new this.Renders[typeData.Render]();
 
-  if ((typeData.init && typeData.init.call(node, options)) || options.disable === true) return node;
+  if ((typeData.init && typeData.init.call(node, options))) return node;
+  if (!(options instanceof Object) || options.disable) return node;
   // destroy 参数
   // 如果有更新加入更新队列  加入不到原型里  分解开来？ 多个原型？
   // update 是 一组 还是 一个  加入到原型 ？

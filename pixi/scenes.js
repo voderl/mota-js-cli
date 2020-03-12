@@ -10,7 +10,7 @@ const app = new Application({
   transparent: false,
   resolution: 1,
 });
-
+app.view.style.position = 'absolute';
 const scenes = new Scene('main', 'main', {
   container: app.stage,
   constant: true,
@@ -73,12 +73,13 @@ statusBar.on('show', function () {
     },
   });
 });
-
+event.on('resetGame', () => {
+  statusBar.flash();
+  toolBar.flash();
+});
 event.on('drawMap', () => {
   console.log('flash');
   game.flash();
-  statusBar.flash();
-  toolBar.flash();
 });
 export {
   app,

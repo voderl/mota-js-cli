@@ -1,4 +1,5 @@
 import event from './event';
+import data from '../mota-js/libs/data';
 
 const set = (arr, valueArr) => {
   for (const i in valueArr) {
@@ -46,8 +47,7 @@ const resize = {
     } else obj.isVerticalChange = false;
     this.oldIsVertical = obj.isVertical;
     const border = obj.borderWidth;
-    const { gameWidth } = obj;
-    const { gameHeight } = obj;
+    const { gameWidth, gameHeight } = obj;
     Object.assign(this.style, obj);
     const { style } = this;
     if (style.isVertical) {
@@ -61,11 +61,10 @@ const resize = {
       style.W = obj.gameWidth + 4 * border + obj.statusBarWidth;
       style.H = obj.gameHeight + 2 * border;
       set(style.main, [0, 0, style.W, style.H]);
-      set(style.statusBar, [border, border, obj.statusBarWidth, obj.gameHeight]);
+      set(style.statusBar, [border, border, obj.statusBarWidth, gameHeight]);
       set(style.game, [2 * border + obj.statusBarWidth, border, gameWidth, gameHeight]);
-      set(style.toolBar, [border, obj.statusBarWidth, obj.statusBarWidth, obj.toolBarHeight]);
+      set(style.toolBar, [border, gameHeight - border - obj.toolBarHeight, obj.statusBarWidth, obj.toolBarHeight]);
     }
-    this.style = style;
     return style;
   },
   do() {
@@ -74,6 +73,7 @@ const resize = {
     if (obj.isVerticalChange) {
       pixi.scenes.doEmit('reLoc', obj);
     }
+    this.resizeCanvas(obj);
   },
   resizeApp(obj) {
     pixi.app.renderer.resize(obj.W, obj.H);
@@ -85,6 +85,47 @@ const resize = {
     dom.style.height = `${totalHeight}px`;
     dom.style.left = `${(obj.clientWidth - totalWidth) / 2}px`;
     dom.style.top = `${(obj.clientHeight - totalHeight) / 2}px`;
+  },
+  resizeCanvas(obj) {
+    const {
+      gameWidth, gameHeight, scale, game,
+    } = obj;
+    const width = gameWidth * scale;
+    const height = gameHeight * scale;
+    const left = (obj.clientWidth - obj.W * scale) / 2 + game[0] * scale;
+    const top = (obj.clientHeight - obj.H * scale) / 2 + game[1] * scale;
+    this.canvasLoc = {
+      width, height, left, top,
+    };
+    this.setCanvasLoc([main.dom.ui, main.dom.data]);
+    this.reLocDymCanvas(Object.values(core.dymCanvas));
+  },
+  reLocDymCanvas(canvas) {
+    if (canvas instanceof Array) return canvas.forEach(c => this.reLocDymCanvas(c));
+    if (canvas instanceof CanvasRenderingContext2D) canvas = canvas.canvas;
+    const {
+      left, top,
+    } = this.canvasLoc;
+    const { scale } = this.style;
+    canvas.style.width = `${canvas.width * scale}px`;
+    canvas.style.height = `${canvas.height * scale}px`;
+    canvas.style.left = `${left + parseFloat(canvas.getAttribute('_left')) * scale}px`;
+    canvas.style.top = `${top + parseFloat(canvas.getAttribute('_top')) * scale}px`;
+    if (canvas.style.position !== 'absolute') canvas.style.position = 'absolute';
+    return canvas;
+  },
+  setCanvasLoc(canvas) {
+    if (canvas instanceof Array) return canvas.forEach(c => this.setCanvasLoc(c));
+    if (canvas instanceof CanvasRenderingContext2D) canvas = canvas.canvas;
+    const {
+      width, height, left, top,
+    } = this.canvasLoc;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    canvas.style.top = `${top}px`;
+    canvas.style.left = `${left}px`;
+    if (canvas.style.position !== 'absolute') canvas.style.position = 'absolute';
+    return null;
   },
 };
 resize.init();
