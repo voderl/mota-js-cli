@@ -10,9 +10,10 @@
 ## 当前进度：
 (resize之后天气消失)
 (中途飘了，妄图改动所有的ui，导致一度负进度)  
-（目前初步完成部分ui的实现，存读档还有浏览地图较难实现）
-（TODO：drawTip，route ui的优化）
-（下一目标，删除大量dom，只剩pixi的canvas和ui的canvas）；  
+（目前初步完成部分ui的实现，存读档还有浏览地图较难实现）  
+（下一目标，删除大量dom，只剩pixi的canvas和ui的canvas）  
+(使用canvasRenderer粗略实现了存读档和浏览地图的缩略显示)；   
+`webpack`：mode为development时正确运行，而mode改为production后出现错误（感觉像是import等语句的实现顺序发生错误，感觉心态爆炸，需要好好再看一下webpack API）   
 ![进度图](./nodeControl/images/progress.png) 
 
 ## 已完成，待优化：

@@ -30,7 +30,7 @@ const game = scenes.addScene('game', 'game', {
 game.addScene(['bg', 'event', 'fg', 'damage', 'ui'], undefined, {
   constant: true,
 });
-const show = scenes.addScene('show', 'main', {
+const show = scenes.addScene('show', 'game', {
   constant: true,
 });
 // 确定基础结构

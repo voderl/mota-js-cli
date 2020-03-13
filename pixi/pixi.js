@@ -1,8 +1,15 @@
+
+import '../mota-js/styles.css';
+
 import * as $ from 'pixi.js-legacy';
 import TWEEN from '@tweenjs/tween.js';
-import Fresh from './libs/Fresh';
+
+import './extend';
 
 import loader from './TexLoader';
+
+import Fresh from './libs/Fresh';
+
 import weather from './weather';
 import { app, scenes, game } from './scenes';
 import event from './event';
@@ -20,9 +27,9 @@ import './scenes/changeFloor';
 import './scenes/toolBar';
 import './scenes/statusBar';
 import './libs/Animate';
-import './extend';
 import './update';
 
+console.log('pixi');
 window.$ = $;
 
 app.ticker.add(() => {

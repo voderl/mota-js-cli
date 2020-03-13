@@ -21,13 +21,13 @@ module.exports = merge(common, {
     path: path.resolve(__dirname, 'test2'),
   },
   module: {
-    rules: [{
-      test: /\.css$/,
-      use: [
-        'style-loader',
-        'css-loader',
-      ],
-    },
-    ],
+    // rules: [{
+    //   test: /\.css$/,
+    //   use: [
+    //     'style-loader',
+    //     'css-loader',
+    //   ],
+    // },
+    // ],
   },
 });

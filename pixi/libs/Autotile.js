@@ -1,6 +1,8 @@
 import BaseBlock from './BaseBlock';
 import event from '../event';
 import ui from '../ui';
+import nodes from '../nodes';
+import Scene from '../Scene';
 
 const draw = {
   _drawAutotile(scene, mapArr, block, size = 32, left = 0, top = 0) {
@@ -115,12 +117,27 @@ const draw = {
 };
 
 class Autotile extends BaseBlock {
+  // TODO 将getNode来实现 获取单个autotile
+  getNode(scene) {
+    if (scene) {
+      const args = scene.args || [];
+      const arr = event.fresh(scene.id, ...args);
+      const node = nodes.getNode('sprite', {
+        disable: true,
+      });
+      draw._drawAutotile(node, arr, this);
+      return node;
+    }
+    return ui.getNode(this.texture, 0, 0, 32, 32);
+  }
+
   drawTo(scene) {
-    const node = scene.addNode('sprite', {
-      disable: true,
-    });
-    const arr = event.fresh(scene.id);
-    draw._drawAutotile(node, arr, this);
+    if (!(scene instanceof Scene)) {
+      scene = pixi.game.getScene(scene);
+    }
+    const node = this.getNode(scene);
+    scene.addNode(node);
+    if (scene instanceof Scene) this.sprite = node;
     return node;
   }
 }

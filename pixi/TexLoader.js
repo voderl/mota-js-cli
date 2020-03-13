@@ -7,7 +7,6 @@ import ui from './ui';
 // 加载过程中的进度条缓动特效
 class TexLoader {
   constructor(packer) {
-    this.trash = {};
     this._progress = 0;
     this.progressWord = '';
     this.length = 0;
@@ -115,6 +114,7 @@ class TexLoader {
     loader.onComplete.add(() => {
       TexLoader.handleTextures(textures);
       event.emit('loadComplete', textures);
+      this.complete = true;
     });
     loader.load();
     this.emitChange();

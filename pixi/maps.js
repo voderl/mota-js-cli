@@ -76,6 +76,31 @@ const maps = {
       }
     }
   },
+  drawBg(scene, floorId) {
+    const { textures } = window.pixi;
+    const { width, height } = core.floors[floorId];
+    const groundId = (core.status.maps || core.floors)[floorId].defaultGround || 'ground';
+    // add Bg
+    const texture = textures[groundId];
+    scene.addNode('tilingSprite', {
+      texture: texture || textures.ground,
+      width: 32 * width,
+      height: 32 * height,
+    });
+    // draw Floor Images
+    // draw Blocks
+    this.drawBgFgMap(scene, floorId, 'bg');
+  },
+  drawEvents(scene, blocks, floorId) {
+    blocks.forEach((block) => {
+      if (block.event && !block.disable) {
+        this.addBlock(scene, block);
+      }
+    });
+  },
+  drawFg(scene, floorId) {
+    this.drawBgFgMap(scene, floorId, 'fg');
+  },
   drawOneDamage(scene, id, x, y, style = ui.TextStyle.damage, floorId = core.status.floorId) {
     const anchor = { x: 0, y: 0.5 };
     const node = scene.addNode('sprite');

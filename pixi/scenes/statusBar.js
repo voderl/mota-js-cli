@@ -77,7 +77,7 @@ statusBar.on('show', () => {
             fontWeight: 'bold',
           }),
           start() {
-            ui.center(this, x + t.width + 3 , y, 0, style.lineHeight, {
+            ui.center(this, x + t.width + 3, y + 3, 0, style.lineHeight, {
               padding: [10, 0],
               minRatio: 0.8,
               maxRatio: 1,

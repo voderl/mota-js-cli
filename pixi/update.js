@@ -2,10 +2,8 @@ import event from './event';
 import { statusBar } from './scenes';
 
 event.setFresh('updateStatusBar', () => {
-  // 更新状态栏
-  console.log('update');
-
   if (core.status.floorId == null) return;
+  // 更新状态栏
   statusBar.update();
   // 难度
   // core.statusBar.hard.innerText = core.status.hard;

@@ -24,13 +24,14 @@ const methods = {
     if (container.parent) return;
     const { parent } = this;
     if (parent !== null) parent.container.addChild(this.container);
-    console.log(`show ${this.id}`);
+    // console.log(`show ${this.id}`);
   },
   flash() {
+    if (!this.active) return;
     this.flashing = true;
     this.emit('hide');
     this.emit('show');
-    console.log(`flash ${this.id}`);
+    // console.log(`flash ${this.id}`);
     this.flashing = false;
   },
   /**
@@ -39,7 +40,7 @@ const methods = {
    */
   hide(callback) {
     this.hideCallback = callback;
-    console.log(`hide ${this.id}`);
+    // console.log(`hide ${this.id}`);
     this.nodes.forEach(node => node.remove());
     this.nodes = [];
   },

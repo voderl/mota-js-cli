@@ -15,11 +15,11 @@ TWEEN.Tween.prototype.destroy = function () {
   this._valuesEnd = null;
   this._easingFunction = null;
 };
-
+console.log('extend');
 /**
  * Black Texture
  */
-function createBlackTexture() {
+function createTexture(color) {
   const canvas = document.createElement('canvas');
 
   canvas.width = 16;
@@ -27,12 +27,12 @@ function createBlackTexture() {
 
   const context = canvas.getContext('2d');
 
-  context.fillStyle = 'black';
+  context.fillStyle = color;
   context.fillRect(0, 0, 16, 16);
 
   return new Texture(new BaseTexture(new resources.CanvasResource(canvas)));
 }
-Texture.BLACK = createBlackTexture();
+Texture.BLACK = createTexture('black');
 // BaseTexture.prototype.getDrawableSource = function getDrawableSource() {
 //   const { resource } = this;
 

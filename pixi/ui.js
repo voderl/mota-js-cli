@@ -2,6 +2,7 @@ import {
   Texture, Rectangle, TextStyle, Text, Graphics,
 } from 'pixi.js-legacy';
 import utils from './utils';
+import nodes from './nodes';
 
 const font = {
   default: new TextStyle({
@@ -53,7 +54,7 @@ const ui = {
     }),
     tip: font.getTextStyle({
       fontWeight: 'normal',
-      fontSize: '16px',
+      fontSize: '17px',
       textBaseline: 'alphabetic',
       strokeThickness: 0,
     }),
@@ -78,6 +79,13 @@ const ui = {
     const { textures } = window.pixi;
     const texture = name instanceof Texture ? name : (textures[name] || textures.error);
     return texture;
+  },
+  getBlockNode(block) {
+    const { Block } = pixi;
+    if (!Block.isBlock(block)) {
+      block = Block.get(block, 0, 0);
+    }
+    return block.getNode();
   },
   getTextureHeight(texture) {
     if (texture instanceof Texture) return texture.height;
@@ -185,27 +193,53 @@ const ui = {
     }
     return hero[direction][0];
   },
-  drawImage(scene, texture, dx, dy, dw, dh, x, y, w, h) {
-    if (typeof texture === 'string') texture = this.getTexture(texture);
-    if (arguments.length > 6) {
-      const node = scene.addNode('sprite', {
-        texture: this.split(texture, dx, dy, dw, dh),
-        disable: true,
-      });
-      node.position.set(x, y);
-      if (w && node.width !== w) node.width = w;
-      if (h && node.height !== h) node.height = h;
-      node.destroyOptions = { texture: true };
-      return node;
-    }
-    const _node = scene.addNode('sprite', {
-      texture,
+  getNode(texture, dx, dy, dw, dh) {
+    const node = nodes.getNode('sprite', {
+      texture: this.split(texture, dx, dy, dw, dh),
       disable: true,
     });
-    _node.position.set(dx, dy);
-    if (dw && _node.width !== dw) _node.width = dw;
-    if (dh && _node.height !== dh) _node.height = dh;
-    return _node;
+    node.destroyOptions = { texture: true };
+    return node;
+  },
+  drawImage(scene, texture, dx, dy, dw, dh, x, y, w, h) {
+    if (typeof texture === 'string') texture = this.getTexture(texture);
+    let node;
+    if (arguments.length > 6) {
+      node = this.getNode(texture, dx, dy, dw, dh);
+    } else {
+      node = nodes.getNode('sprite', {
+        texture,
+        disable: true,
+      });
+      x = dx;
+      y = dy;
+      w = dw;
+      h = dh;
+    }
+    scene.addNode(node);
+    node.position.set(x, y);
+    if (w && node.width !== w) node.width = w;
+    if (h && node.height !== h) node.height = h;
+    return node;
+  },
+  fillRect(scene, x, y, width, height, {
+    radius = 0,
+    fillAlpha = 1,
+    fillColor = 0x0,
+  } = {}) {
+    return scene.addNode('graphics', {
+      init() {
+        if (fillColor && !Number.isInteger(fillColor)) fillColor = utils.getColor(fillColor);
+        this.beginFill(fillColor, fillAlpha);
+        if (radius) {
+          if (!Number.isInteger(radius)) radius *= Math.min(width, height);
+          this.drawRoundedRect(0, 0, width, height, radius);
+        } else this.drawRect(0, 0, width, height);
+        this.endFill();
+        this.position.set(x, y);
+        return true;
+      },
+    });
   },
   drawText(scene, text, style, x, y, options = {}) {
     const newStyle = this.getTextStyle(style);
@@ -233,9 +267,6 @@ const ui = {
     graphics.drawRect(...zone);
     graphics.endFill();
     scene.container.mask = graphics;
-  },
-  moveHero(hero) {
-    hero;
   },
   getHeroDrawObj() {
     const heroIconArr = core.material.icons.hero;
@@ -295,11 +326,13 @@ const ui = {
   },
   fitZone(node, zone, type = 'center', options = {}) {
     let [x, y, w, h] = zone;
-    const [top, right, bottom, left] = this.getPadding(options.padding);
-    x += left;
-    y += top;
-    w -= left + right;
-    h -= top + bottom;
+    if (options.padding) {
+      const [top, right, bottom, left] = this.getPadding(options.padding);
+      x += left;
+      y += top;
+      w -= left + right;
+      h -= top + bottom;
+    }
     let ratio = Math.min(h / node.height, w / node.width);
     if (options.maxRatio)ratio = Math.min(ratio, options.maxRatio);
     if (options.minRatio) {

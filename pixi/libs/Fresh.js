@@ -17,9 +17,13 @@ class Notify {
 
   dirty(...args) {
     if (!this._dirty) {
+      this.args = args;
       this._dirty = true;
       this.data = this.func(...args);
       dirty.push(this);
+    } else if (!this.args.every((a, i) => a === args[i])) {
+      this.data = this.func(...args);
+      this.args = args;
     }
     return this.data;
   }
@@ -55,8 +59,8 @@ const Fresh = {
         item._dirty = false;
         if (item instanceof Debounce) {
           item.func(...item.args);
-          delete item.args;
         }
+        delete item.args;
       });
       dirty = [];
     }

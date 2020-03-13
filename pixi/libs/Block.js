@@ -8,12 +8,15 @@ const { textures } = loader;
 const idToNumber = textures._info;
 const numberToInfo = textures._maps;
 
-event.setFresh('bg', (floorId = core.status.floorId) => core.maps._getBgFgMapArray('bg', floorId, true));
+event.setFresh('bg', (floorId = core.status.floorId) => {
+  console.log(floorId);
+  return core.maps._getBgFgMapArray('bg', floorId, true);
+});
 event.setFresh('fg', (floorId = core.status.floorId) => core.maps._getBgFgMapArray('fg', floorId, true));
 
-event.setFresh('event', (floorId = core.status.floorId) => {
+event.setFresh('event', (floorId = core.status.floorId, blocks) => {
+  blocks = blocks || core.status.maps[floorId].blocks;
   const { width, height } = core.floors[floorId];
-  const { blocks } = core.status.maps[floorId];
   return core.maps._getMapArrayFromBlocks(blocks, width, height);
 });
 

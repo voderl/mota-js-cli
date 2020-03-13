@@ -1,3 +1,4 @@
+let id = 0;
 
 const utils = {
   scan: {
@@ -5,6 +6,10 @@ const utils = {
     left: { x: -1, y: 0 },
     down: { x: 0, y: 1 },
     right: { x: 1, y: 0 },
+  },
+  getId() {
+    id += 1;
+    return id;
   },
   /**
    * deep clone a Object
