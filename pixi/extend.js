@@ -3,6 +3,7 @@
 */
 import TWEEN from '@tweenjs/tween.js';
 import { BaseTexture, resources, Texture } from 'pixi.js-legacy';
+import utils from './utils';
 
 /** 拓展TWEEN的destroy方法，在node（节点sprite）destroy时tween也destroy */
 TWEEN.Tween.prototype.destroy = function () {
@@ -27,12 +28,14 @@ function createTexture(color) {
 
   const context = canvas.getContext('2d');
 
-  context.fillStyle = color;
-  context.fillRect(0, 0, 16, 16);
-
+  // context.fillStyle = color;
+  // context.fillRect(0, 0, 16, 16);
+  utils.fillRoundRect(context, 0, 0, 16, 16, 4, color);
   return new Texture(new BaseTexture(new resources.CanvasResource(canvas)));
 }
+Texture.ROUNDWHITE = createTexture('white');
 Texture.BLACK = createTexture('black');
+Texture.RED = createTexture('red');
 // BaseTexture.prototype.getDrawableSource = function getDrawableSource() {
 //   const { resource } = this;
 

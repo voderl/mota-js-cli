@@ -1,8 +1,7 @@
 import { Texture } from 'pixi.js-legacy';
-import { scenes } from '../scenes';
+import { scenes, game } from '../scenes';
 
-console.log('route');
-const show = scenes.getScene('show');
+const show = game.getScene('event');
 
 let points = [];
 
@@ -35,7 +34,7 @@ const removing = function (cb) {
 
 const drawPoint = (x, y) => {
   const node = show.addNode('sprite', {
-    texture: Texture.WHITE,
+    texture: Texture.ROUNDWHITE,
     init() {
       this.scale.set(0.6, 0.6);
       this.alpha = 0.6;
@@ -53,7 +52,7 @@ const drawPoint = (x, y) => {
 };
 const drawEnd = (x, y) => {
   const node = show.addNode('sprite', {
-    texture: Texture.WHITE,
+    texture: Texture.ROUNDWHITE,
     init() {
       this.removing = removing;
       this.loop({
@@ -85,13 +84,24 @@ const drawRoute = (moveStep) => {
     }
   });
 };
+const wrong = (x, y) => {
+  const node = drawPoint(x, y);
+  node.texture = Texture.RED;
+  node.scale.set(1, 1);
+  node.removing = removing;
+  node.remove();
+};
 
 const route = {
   fillPosWithPoint(pos) {
-    points.push(drawPoint(pos.x, pos.y));
+    const { offsetX, offsetY } = core.bigmap;
+    const x = pos.x + offsetX / 32;
+    const y = pos.y + offsetY / 32;
+    points.push(drawPoint(x, y));
   },
   drawRoute,
   clear,
   clearAutomaticRouteNode,
+  wrong,
 };
 export default route;

@@ -134,7 +134,7 @@ const maps = {
   },
   drawExtraDamage(scene, floorId = core.status.floorId) {
     const style = ui.getTextStyle(ui.TextStyle.damage, {
-      fill: '#FF7F00',
+      fill: '#FFaF00',
     });
     const anchor = { x: 0.5, y: 0.5 };
     if (core.flags.displayExtraDamage) {

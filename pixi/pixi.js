@@ -1,6 +1,4 @@
 
-import '../mota-js/styles.css';
-
 import * as $ from 'pixi.js-legacy';
 import TWEEN from '@tweenjs/tween.js';
 
@@ -19,7 +17,7 @@ import ui from './ui';
 
 import nodes from './nodes';
 import resize from './resize';
-
+import hero from './scenes/hero';
 import Block from './libs/Block';
 
 import './scenes/game';
@@ -29,7 +27,7 @@ import './scenes/statusBar';
 import './libs/Animate';
 import './update';
 
-console.log('pixi');
+console.log('loadFirst');
 window.$ = $;
 
 app.ticker.add(() => {
@@ -51,6 +49,7 @@ const pixi = {
   Block,
   utils,
   weather,
+  hero,
   interaction: app.renderer.plugins.interaction,
   canvasRenderer: new $.CanvasRenderer(),
   Easing: TWEEN.Easing.Quadratic.InOut,
