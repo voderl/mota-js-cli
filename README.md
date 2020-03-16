@@ -7,8 +7,9 @@
 + nodeControl ： 用node.js做的一些格式化处理，和预先处理
 + test ： 一些测试工作  
   `npm run start` 开启工程
+## [`测试链接`](https://www.voderl.cn/dist/)
+加载较慢，请耐心等待
 ## 当前进度：
-(resize之后天气消失)
 (中途飘了，妄图改动所有的ui，导致一度负进度)  
 （目前初步完成部分ui的实现，存读档还有浏览地图较难实现）  
 （下一目标，删除大量dom，只剩pixi的canvas和ui的canvas）  
