@@ -1,9 +1,10 @@
 // https://github.com/oliver-moran/jimp
 import Jimp from 'jimp';
 
-import { icons_4665ee12_3a1f_44a4_bea3_0fccba634dc1 as icons } from '../mota-js/project/icons';
-import { maps_90f36752_8815_4be8_b32b_d7fad1d0542e as maps } from '../mota-js/project/maps';
-import { data_a1e2fb4a_e986_4524_b0da_9b7ba7c0874d as data } from '../mota-js/project/data';
+import data from '../editor/project/data';
+import maps from '../editor/project/maps';
+import icons from '../editor/project/icons';
+import read from './read';
 
 const fs = require('fs');
 const path = require('path');
@@ -63,10 +64,11 @@ main.images = {
   extraImages: {},
   animatesBuffer: {},
 };
-const floors = require.context('../mota-js/project/floors/', false, /\.js$/);
+const floors = require.context('../editor/project/floors/', false, /\.js$/);
+const extraImagesList = read.readdir('../editor/project/extraImages/', false, /\.(png|jpg|gif|ico)$/);
 const { floorIds, images: rawImages } = data.main;
 main.animates = data.main.animates;
-main.rawImages = rawImages;
+main.extraImagesList = extraImagesList;
 const blockIds = {};
 // 加载出地图数组中所使用的block 的num
 (function loadFloors() {
@@ -233,12 +235,13 @@ loadImages().then(() => {
   // 加载额外images
   (function () {
     const { extraImages } = main.images;
+    console.log(Object.keys(extraImages));
     Object.keys(extraImages).forEach(id => {
       const { [id]: image } = extraImages;
       // 较大的图片 可能被jimp 处理后体积增大 如bg.jpg 因此较大图片单独处理
       // 因此在此重新读取文件重新写入
       if (image.bitmap.width * image.bitmap.height >= 160000) {
-        fs.readFile(`${path.resolve(main.imagesDir, id)}`,
+        fs.readFile(`${path.resolve(main.extraImagesDir, id)}`,
           (err, img) => {
             if (err) throw err;
             fs.writeFile(`${path.resolve('./data', id)}`, img,
@@ -255,7 +258,7 @@ loadImages().then(() => {
         if (id.lastIndexOf('.') !== -1) {
           basename = id.substring(0, id.lastIndexOf('.'));
         }
-        if (blocksBuffer[basename]) console.log(`额外图片里有重名id${basename}`)
+        if (blocksBuffer[basename]) console.log(`额外图片里有重名id${basename}`);
         blocksBuffer[basename] = imageBuffer;
       });
     });

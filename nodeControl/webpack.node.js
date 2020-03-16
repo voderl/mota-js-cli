@@ -14,17 +14,6 @@ module.exports = {
     path: path.resolve(__dirname),
   },
   target: 'node',
-  // optimization: {
-  //   splitChunks: {
-  //     cacheGroups: {
-  //       vendor: {
-  //         test: /[\\/]node_modules[\\/]/,
-  //         name: 'vendors',
-  //         chunks: 'all',
-  //       },
-  //     },
-  //   },
-  // },
   plugins: [
   ],
   resolve: {
@@ -39,6 +28,20 @@ module.exports = {
     },
   ],
   module: {
+    rules: [
+      {
+        test: /data.js$/,
+        use: 'exports-loader?data_a1e2fb4a_e986_4524_b0da_9b7ba7c0874d',
+      },
+      {
+        test: /maps.js$/,
+        use: 'exports-loader?maps_90f36752_8815_4be8_b32b_d7fad1d0542e',
+      },
+      {
+        test: /icons.js$/,
+        use: 'exports-loader?icons_4665ee12_3a1f_44a4_bea3_0fccba634dc1',
+      },
+    ],
     // rules: [
     //   {
     //     test: /jimp/,

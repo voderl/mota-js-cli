@@ -36,7 +36,7 @@ const drawPoint = (x, y) => {
   const node = show.addNode('sprite', {
     texture: Texture.ROUNDWHITE,
     init() {
-      this.scale.set(0.6, 0.6);
+      this.scale.set(0.3, 0.3);
       this.alpha = 0.6;
     },
     data: {
@@ -60,7 +60,7 @@ const drawEnd = (x, y) => {
       }, {
         alpha: 0.8,
       }, 400).onUpdate(n => {
-        n.scale.set(n.alpha * 3, n.alpha * 3);
+        n.scale.set(n.alpha * 1.5, n.alpha * 1.5);
       });
     },
     data: {

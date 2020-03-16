@@ -7,8 +7,8 @@ class Event extends utils.EventEmitter {
     this.freshList = {};
   }
 
-  setFresh(key, func, type) {
-    this.freshList[key] = Fresh.get(func, type);
+  setFresh(key, ...args) {
+    this.freshList[key] = Fresh.get(...args);
     return this.freshList[key];
   }
 

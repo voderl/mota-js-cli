@@ -7,6 +7,7 @@ const set = (arr, valueArr) => {
   }
 };
 const resize = {
+  game: 288,
   __PIXELS__: 416,
   style: {
     main: [],
@@ -35,8 +36,8 @@ const resize = {
       scale,
       clientWidth,
       clientHeight,
-      gameWidth: 416,
-      gameHeight: 416,
+      gameWidth: this.__PIXELS__,
+      gameHeight: this.__PIXELS__,
       borderWidth: 3,
       statusBarHeight: 108, // vertical true
       toolBarHeight: isVertical ? 50 : 116,

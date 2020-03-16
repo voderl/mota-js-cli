@@ -27,6 +27,8 @@ const toolBar = scenes.addScene('toolBar', 'toolBar', {
 const game = scenes.addScene('game', 'game', {
   constant: true,
 });
+game.container.interactiveChildren = false;
+game.container.inteactive = false;
 game.addScene(['bg', 'event', 'fg', 'damage', 'ui'], undefined, {
   constant: true,
 });

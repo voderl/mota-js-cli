@@ -7,6 +7,7 @@ import nodes from './nodes';
 import ui from './ui';
 import event from './event';
 import resize from './resize';
+import hero from './scenes/hero';
 
 const { style } = resize;
 // choose 函数 choose([2,2,3],[10,5,5])得到结果可能为2  2 3 概率分布为10：5：5 
@@ -45,7 +46,16 @@ const weather = {
     delete options.Render;
     delete options.init;
     delete options.args;
-    options._update = update;
+    if (update instanceof Function) {
+      options._update = function() {
+        update.apply(this);
+        const { velocity: { x, y }, playing } = pixi.hero;
+        if (playing) {
+          this.x += x;
+          // this.y += y;
+        }
+      };
+    }
     const _Render = nodes.registerRender(type, Render, options);
     const data = {
       particleContainer,
@@ -142,7 +152,8 @@ event.once('loadComplete', () => {
       this.angle += this.angleSpeed;
       if (this.y > style.H) {
         this.resize();
-      }
+      } else if (this.x < 0) this.x = style.W;
+      else if (this.x > style.W) this.x = 0;
     },
     removing(callback) {
       this.changeTo({

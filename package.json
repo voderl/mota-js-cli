@@ -14,7 +14,7 @@
     "build": "webpack --config webpack.prod.js",
     "buildNode": "webpack --config \"./nodeControl/webpack.node.js\"",
     "test": "webpack-dev-server --config \"./test/webpack.test.js\"",
-    "testBuild": "webpack --config \"./test/webpack.test.js\""
+    "buildTest": "webpack --config \"./test/webpack.test.js\""
   },
   "keywords": [],
   "author": "",
@@ -28,6 +28,7 @@
     "eslint": "^6.8.0",
     "eslint-config-airbnb-base": "^14.1.0",
     "eslint-plugin-import": "^2.20.1",
+    "exports-loader": "^0.7.0",
     "file-loader": "^5.1.0",
     "free-tex-packer-core": "^0.3.1",
     "glob": "^7.1.6",

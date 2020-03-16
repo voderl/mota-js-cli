@@ -5,12 +5,12 @@ const path = require('path');
 const materials = [
   'animates',
   'enemys',
-  'hero', 'items', 'npcs', 'terrains', 'enemy48', 'npc48',
-  'airwall',
+  'items', 'npcs', 'terrains', 'enemy48', 'npc48',
   'icons',
 ];
-const imagesDir = path.resolve('../mota-js/project/images');
-const animatesDir = path.resolve('../mota-js/project/animates');
+const imagesDir = path.resolve('../editor/project/images/');
+const extraImagesDir = path.resolve('../editor/project/extraImages/');
+const animatesDir = path.resolve('../editor/project/animates');
 const animatesData = {};
 const readFile = (src) => {
   const temp = new Promise((resolve, reject) => {
@@ -33,7 +33,15 @@ const readAnimate = (name) => new Promise((resolve, reject) => {
 const addImage = (rootDir, name) => {
   let realName = name;
   if (name.indexOf('.') === -1) realName = `${name}.png`;
-  return Jimp.read(`${imagesDir}/${realName}`).then(image => {
+  return Jimp.read(`${path.resolve(imagesDir, realName)}`).then(image => {
+    rootDir[name] = image;
+  }).catch(err => console.error(err));
+};
+const addExtraImage = (rootDir, name) => {
+  if (name.startsWith('./')) name = name.slice(2);
+  let realName = name;
+  if (name.indexOf('.') === -1) realName = `${name}.png`;
+  return Jimp.read(`${path.resolve(extraImagesDir, realName)}`).then(image => {
     rootDir[name] = image;
   }).catch(err => console.error(err));
 };
@@ -73,12 +81,14 @@ async function loadImages() {
   const { main } = global;
   const _root = main.images;
   main.imagesDir = imagesDir;
-  main.rawImages.push('hero.png', 'ground.png', 'snowNode.png');
+  main.extraImagesDir = extraImagesDir;
+  // main.rawImages.push('hero.png', 'ground.png');
   await readAll([
     [_root, materials],
     [_root.autotile, main.autotiles],
     [_root.tilesets, main.tilesets],
-    [_root.extraImages, main.rawImages],
+    // load ExtraImages
+    [_root.extraImages, main.extraImagesList, addExtraImage],
     [_root.animatesBuffer, main.animates, addAnimate],
   ]);
   const { outputPath } = main;

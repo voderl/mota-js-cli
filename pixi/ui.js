@@ -186,6 +186,7 @@ const ui = {
   getHeroTexture(fullName, direction = 'down') {
     const [name, ext] = utils.parseName(fullName);
     const hero = this.getTexture(name);
+    // console.log(hero);
     if (hero instanceof Texture) {
       const temp = this.splitTexture(hero, ['down', 'left', 'right', 'up'], 4);
       pixi.textures[name] = temp;

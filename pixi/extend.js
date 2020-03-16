@@ -23,14 +23,14 @@ console.log('extend');
 function createTexture(color) {
   const canvas = document.createElement('canvas');
 
-  canvas.width = 16;
-  canvas.height = 16;
+  canvas.width = 32;
+  canvas.height = 32;
 
   const context = canvas.getContext('2d');
 
   // context.fillStyle = color;
   // context.fillRect(0, 0, 16, 16);
-  utils.fillRoundRect(context, 0, 0, 16, 16, 4, color);
+  utils.fillRoundRect(context, 0, 0, 32, 32, 8, color);
   return new Texture(new BaseTexture(new resources.CanvasResource(canvas)));
 }
 Texture.ROUNDWHITE = createTexture('white');

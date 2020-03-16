@@ -54,6 +54,17 @@ Block.get = function (id, x, y, _addInfo, eventFloor) {
   return block;
 };
 
+Block.getNumberById = function (id) {
+  if (Number.isInteger(id)) return id;
+  num = parseInt(id, 10);
+  if (Number.isNaN(num)) num = (idToNumber[id] || {}).num;
+};
+
+Block.getBlockByNumber = function (num) {
+  if (this.isBlock(num)) return num;
+  return this.get(num, 0, 0);
+};
+
 Block.getInfo = function (id) {
   if (id instanceof BaseBlock) return id.getInfo();
   const block = this.get(id);
@@ -61,7 +72,7 @@ Block.getInfo = function (id) {
   return block.getInfo();
 };
 
-Block.isBlock = (block) => {
+Block.isBlock = function (block) {
   return block instanceof BaseBlock;
 };
 

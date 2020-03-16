@@ -32,7 +32,7 @@ const renderNode = (scene, col, row, callback) => {
             alpha: 0.9,
             angle: 90,
           }, 500, 1).onUpdate((n) => {
-            n.scale.set(3 * n.alpha, 3 * n.alpha);
+            n.scale.set(1.5 * n.alpha, 1.5 * n.alpha);
           }).onComplete(() => {
             this.remove();
           });
