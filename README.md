@@ -11,14 +11,21 @@
 加载较慢，请耐心等待
 ## 当前进度：
 (中途飘了，妄图改动所有的ui，导致一度负进度)  
+
 （目前初步完成部分ui的实现，存读档还有浏览地图较难实现）  
-（下一目标，删除大量dom，只剩pixi的canvas和ui的canvas）  
-(使用canvasRenderer粗略实现了存读档和浏览地图的缩略显示)；   
-`webpack`：mode为development时正确运行，而mode改为production后出现错误（感觉像是import等语句的实现顺序发生错误，感觉心态爆炸，需要好好再看一下webpack API）   
+
+(使用canvasRenderer粗略实现了存读档和浏览地图的缩略显示)； 
+
+（对于大图块来说，仍然不好绘制。因为它要求只有下面的图块，甚至只有一块图块是绘制在event层的，其他图块要绘制在前景层，较为麻烦，现不考虑）
+
+（增加了脚印特效，允许一些图块通过代码绘制，比如fly 不间断旋转） 
+
+`webpack`：mode为development时正确运行，而mode改为production后出现错误：确认为`import 'xxxxx'`出现错误，改为`require('xxx')`后正确运行，
+似乎是`import {} from 'xxxx'`和它不兼容。但是不明白为什么development可以正常运行。
 ![进度图](./nodeControl/images/progress.png) 
 
-## 已完成，待优化：
-√：尝试node和[`free-tex-packer-core`](https://github.com/odrick/free-tex-packer-core)  和 [`jimp`](https://github.com/oliver-moran/jimp)。  
+## 待优化：
+√：使用node和[`free-tex-packer-core`](https://github.com/odrick/free-tex-packer-core)  和 [`jimp`](https://github.com/oliver-moran/jimp)。  
 遍历地图，将使用的图块(包括icons，animates)集中到一张图片上，或者将附加的较小的图片也综合成一张图（最大尺寸512*512，大于的话分成多个图片）（较大的图片独立出来，不打包），得到png和json 来进行加载；  
   => nodeControl中的main.js  
   => webpack编译(`npm run buildNode`)后变成 `./nodeControl/index.bundle.js`  
