@@ -16,7 +16,7 @@ module.exports = {
       },
     },
   },
-  mode: 'development',
+  mode: 'production',
   devtool: 'inline-source-map',
   devServer: {
     contentBase: path.join(__dirname, 'disk'),

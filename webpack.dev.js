@@ -16,6 +16,7 @@ module.exports = merge(common, {
   ],
   output: {
     publicPath: '',
+    hashDigestLength: 8,
     filename: '[name].[hash].bundle.js',
     chunkFilename: '[name].[hash].bundle.js',
     path: path.resolve(__dirname, 'test2'),

@@ -10,8 +10,8 @@ const {
 const common = require('./webpack.common.js');
 
 module.exports = merge(common, {
-  mode: 'development',
-  // mode: 'production',
+  // mode: 'development',
+  mode: 'production',
   devtool: 'source-map',
   optimization: {
     minimizer: [
@@ -35,23 +35,17 @@ module.exports = merge(common, {
     // new webpack.HashedModuleIdsPlugin(),
   ],
   module: {
-    // rules: [{
-    //   test: /\.css$/,
-    //   use: [
-    //     MiniCssExtractPlugin.loader,
-    //     'css-loader',
-    //   ],
-    // },
-    // {
-    //   test: /\.js$/,
-    //   exclude: /(node_modules|bower_components)/,
-    //   use: {
-    //     loader: 'babel-loader',
-    //     options: {
-    //       presets: ['@babel/preset-env'],
-    //     },
-    //   },
-    // },
-    // ],
+    rules: [
+      {
+        test: /\.js$/,
+        exclude: /(node_modules|bower_components)/,
+        use: {
+          loader: 'babel-loader',
+          options: {
+            presets: ['@babel/preset-env'],
+          },
+        },
+      },
+    ],
   },
 });
