@@ -3,6 +3,7 @@ import TWEEN from '@tweenjs/tween.js';
 import event from './event';
 import loading from './scenes/loading';
 import ui from './ui';
+import handle from '../project/handle';
 
 // 加载过程中的进度条缓动特效
 class TexLoader {
@@ -132,7 +133,8 @@ class TexLoader {
       const texture = textures[id];
       [textures[id]] = ui.splitTexture(texture, 1, animate);
     });
-    textures.hero = this.handleHero(textures.hero);
+    // textures.hero = this.handleHero(textures.hero);
+    handle(textures);
   }
 
   static handleHero(hero) {

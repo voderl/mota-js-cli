@@ -105,9 +105,10 @@ const maps = {
     const anchor = { x: 0, y: 0.5 };
     const node = scene.addNode('sprite');
     if (core.flags.displayEnemyDamage) {
-      const { damage, color } = core.enemys.getDamageString(id, x, y, floorId);
+      const { damage, color, stroke } = core.enemys.getDamageString(id, x, y, floorId);
       ui.drawText(node, damage, ui.getTextStyle(style, {
         fill: color,
+        stroke,
       }), 1, 31, {
         anchor,
       });
@@ -165,8 +166,7 @@ const maps = {
     window.node = node;
     node.removing = keep
       ? function (cb) {
-        const x = this.x / 32;
-        const y = this.y / 32;
+        const { x, y } = block;
         core.setBlock(block.id, x, y);
         core.showBlock(x, y);
         cb();
@@ -176,9 +176,9 @@ const maps = {
           alpha: 0,
         }, 500, cb);
       };
-    return this.moveBlockOneStep(node, moveSteps, time, callback);
+    return this.moveBlockOneStep(block, node, moveSteps, time, callback);
   },
-  moveBlockOneStep(node, moveSteps, time, callback) {
+  moveBlockOneStep(block, node, moveSteps, time, callback) {
     const dir = moveSteps.shift();
     if (!dir) {
       node.remove();
@@ -189,8 +189,10 @@ const maps = {
     const obj = {};
     obj.x = node.x + 32 * scan.x;
     obj.y = node.y + 32 * scan.y;
+    block.x += scan.x;
+    block.y += scan.y;
     node.changeTo(obj, time, () => {
-      this.moveBlockOneStep(node, moveSteps, time, callback);
+      this.moveBlockOneStep(block, node, moveSteps, time, callback);
     });
   },
   clearMap() {

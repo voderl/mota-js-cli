@@ -153,6 +153,11 @@ export default class Scene extends utils.EventEmitter {
     return (this.parent) && this.parent.parent === null;
   }
 
+  stopAction() {
+    this.container.interactive = false;
+    this.container.interactiveChildren = false;
+  }
+
   addScene(id, resizeType, options = {}) {
     if (id instanceof Array) return id.forEach(_id => this.addScene(_id, resizeType, options));
     const position = methods.combinePosition(this.position, options.position);

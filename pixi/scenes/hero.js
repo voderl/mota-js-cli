@@ -2,9 +2,12 @@ import TWEEN from '@tweenjs/tween.js';
 import utils from '../utils';
 import resize from '../resize';
 import { game } from '../scenes';
+import loader from '../TexLoader';
+import { Texture } from 'pixi.js-legacy';
 
 const { style } = resize;
 const Easing = TWEEN.Easing.Cubic.Out;
+const bg = game.getScene('bg');
 /**
  * 每四帧刷新一次
  */
@@ -19,6 +22,25 @@ const hero = {
     y: 0,
   },
   tween: null,
+  setRoute(x, y, direction) {
+    const { route } = loader.textures;
+    bg.addNode('sprite', {
+      texture: route[direction],
+      data: {
+        x: 32 * x + 16,
+        y: 32 * y + 16,
+        anchor: {
+          x: 0.5,
+          y: 0.5,
+        },
+      },
+      init() {
+        this.getTween({
+          alpha: 0,
+        }, 500, () => { this.remove(); }).delay(800).start();
+      },
+    });
+  },
   setOffset(offsetX, offsetY) {
     const { container } = game;
     const [posX, posY] = container.zone;
@@ -55,7 +77,7 @@ const hero = {
     const dh = 32 * height - gameHeight;
     const { x, y, height: h } = this.sprite;
     const offsetX = dw <= 0 ? 0 : utils.clamp(x - gameWidth / 2, 0, dw);
-    const offsetY = dh <= 0 ? 0 : utils.clamp(y - gameHeight / 2 - h / 2 + 32, 0, dh);
+    const offsetY = dh <= 0 ? 0 : utils.clamp(y - gameHeight / 2 + h / 2 - 16, 0, dh);
     core.bigmap.offsetX = offsetX;
     core.bigmap.offsetY = offsetY;
     this.setOffset(offsetX, offsetY);
@@ -82,10 +104,15 @@ const hero = {
     sprite.position.set(x, y);
     if (sprite.status !== loc.direction) sprite.change(loc.direction);
     this.updateView();
-    return loc.direction;
+    return {
+      direction: loc.direction,
+      x: loc.x,
+      y: loc.y,
+    };
   },
   move(time, callback) {
-    const direction = this.draw();
+    const { direction, x, y } = this.draw();
+    this.setRoute(x, y, direction);
     this.moveOneStep(direction, time, callback);
   },
   stop() {

@@ -194,6 +194,28 @@ const ui = {
     }
     return hero[direction][0];
   },
+  setHero(id, scene = pixi.game.getScene('event')) {
+    const { hero } = pixi;
+    if (hero.sprite) hero.sprite.remove();
+    const _texture = this.getTexture(id);
+    if (_texture instanceof Texture) {
+      const temp = this.splitTexture(_texture, ['down', 'left', 'right', 'up'], 4);
+      pixi.textures[id] = temp;
+      return this.setHero(id);
+    }
+    hero.sprite = scene.addNode('hero', {
+      texture: _texture,
+      data: {
+        anchor: {
+          x: 0.5,
+          y: 0.5,
+        },
+      },
+    });
+    if (hero.speed) hero.sprite.animationSpeed = hero.speed;
+    core.drawHero();
+    return null;
+  },
   getNode(texture, dx, dy, dw, dh) {
     const node = nodes.getNode('sprite', {
       texture: this.split(texture, dx, dy, dw, dh),

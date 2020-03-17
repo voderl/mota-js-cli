@@ -27,16 +27,25 @@ const toolBar = scenes.addScene('toolBar', 'toolBar', {
 const game = scenes.addScene('game', 'game', {
   constant: true,
 });
-game.container.interactiveChildren = false;
-game.container.inteactive = false;
-game.addScene(['bg', 'event', 'fg', 'damage', 'ui'], undefined, {
+game.stopAction();
+// 没有点击操作的node 在game里面
+game.addScene(['bg', 'event', 'fg', 'damage'], undefined, {
   constant: true,
 });
+// ui 的显示分为 ui层 和 show层
+// ui层是统一清空的
+// show层是自行清空的，要给在show层显示的node 触发 remove ，比如寻路图块
 const show = scenes.addScene('show', 'game', {
   constant: true,
 });
+const weather = scenes.addScene('weather', 'main', {
+  constant: true,
+});
+weather.stopAction();
+const _ui = scenes.addScene('ui', 'game');
 // 确定基础结构
 scenes.show();
+const fps = scenes.addNode('text');
 
 // 设置背景 border
 statusBar.on('show', function () {
@@ -89,4 +98,5 @@ export {
   game,
   statusBar,
   toolBar,
+  fps,
 };

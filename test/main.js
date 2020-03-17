@@ -2,12 +2,19 @@
 
 // import { icons_4665ee12_3a1f_44a4_bea3_0fccba634dc1 as icons } from '../mota-js/project/icons';
 // import { maps_90f36752_8815_4be8_b32b_d7fad1d0542e as maps } from '../mota-js/project/maps';
-import data from '../editor/project/data';
-import maps from '../editor/project/maps';
-import icons from '../editor/project/icons';
+// import data from '../editor/project/data';
+// import maps from '../editor/project/maps';
+// import icons from '../editor/project/icons';
 
 
-window.data = data;
+require('./data/first');
+require('./data/second');
+
+console.log('third');
+
+
+
+
 // import Dexie from 'dexie';
 
 // /**

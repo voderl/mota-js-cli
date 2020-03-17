@@ -2,6 +2,7 @@ import loader from '../TexLoader';
 import utils from '../utils';
 import Scene from '../Scene';
 import nodes from '../nodes';
+import draw from '../../project/draw';
 
 const { textures } = loader;
 
@@ -97,19 +98,22 @@ class BaseBlock {
       texture: this.texture,
       disable: true,
     });
+    node.anchor.set(0.5, 0.5);
+    const { id } = this.event;
+    if (draw[id] instanceof Function) return draw[id].call(this, node);
     return node;
   }
 
   drawTo(scene) {
     // 默认不给绘制方法以自定义, 如需可单独设置
-    const { x, y } = this;
+    const { x, y, id } = this;
     if (!(scene instanceof Scene)) {
       scene = pixi.game.getScene(scene);
     }
     const node = this.getNode();
-    scene.addNode(node);
-    node.position.set(x * 32 + 16 - node.width / 2, y * 32 + 32 - node.height);
+    node.position.set(x * 32 + 16, y * 32 + 32 - node.height / 2);
     if (scene instanceof Scene) this.sprite = node;
+    scene.addNode(node);
     return node;
   }
 

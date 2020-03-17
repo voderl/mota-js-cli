@@ -28,6 +28,7 @@ _nodes.prototype.update = function () {
 // 将这些方法放入原型链
 _nodes.prototype.default = {
   getTween(to, time, callback) {
+    if (!this.tweens) this.tweens = [];
     const changing = new TWEEN.Tween(this)
       .to(to, time);
     if (callback)changing.onComplete(callback);
@@ -74,7 +75,15 @@ _nodes.prototype.default = {
   },
   // 实际上的删除
   _remove(cb) {
-    const { parent, tweens, destroyOptions } = this;
+    const {
+      parent, tweens, destroyOptions, children,
+    } = this;
+    if (children.length !== 0) {
+      const oldChildren = this.removeChildren(0, children.length);
+      for (let i = 0; i < oldChildren.length; ++i) {
+        oldChildren[i].remove();
+      }
+    }
     if (parent) parent.removeChild(this);
     if (cb instanceof Function) cb();
     if (tweens) {

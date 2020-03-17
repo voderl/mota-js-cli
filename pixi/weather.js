@@ -7,7 +7,9 @@ import nodes from './nodes';
 import ui from './ui';
 import event from './event';
 import resize from './resize';
-import hero from './scenes/hero';
+import { scenes } from './scenes';
+
+const weatherScene = scenes.getScene('weather');
 
 const { style } = resize;
 // choose 函数 choose([2,2,3],[10,5,5])得到结果可能为2  2 3 概率分布为10：5：5 
@@ -66,11 +68,11 @@ const weather = {
     this.types[type] = data;
   },
   getScene(type, options) {
-    const scene = pixi.scenes.getScene(`weather-${type}`, 1);
+    const scene = weatherScene.getScene(`weather-${type}`, 1);
     if (scene) return scene;
     const data = options || this.types[type];
     if (!data) throw new Error(`找不到${type}`);
-    const s = pixi.scenes.addScene(`weather-${type}`, 'main', {
+    const s = weatherScene.addScene(`weather-${type}`, 'main', {
       container: data.particleContainer ? new ParticleContainer(undefined, {
         scale: true,
         position: true,

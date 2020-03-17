@@ -2,14 +2,14 @@
 import * as $ from 'pixi.js-legacy';
 import TWEEN from '@tweenjs/tween.js';
 
-import './extend';
+require('./extend');
 
 import loader from './TexLoader';
 
 import Fresh from './libs/Fresh';
 
 import weather from './weather';
-import { app, scenes, game } from './scenes';
+import { app, scenes, game, fps } from './scenes';
 import event from './event';
 import maps from './maps';
 import utils from './utils';
@@ -20,20 +20,21 @@ import resize from './resize';
 import hero from './scenes/hero';
 import Block from './libs/Block';
 
-import './scenes/game';
-import './scenes/changeFloor';
-import './scenes/toolBar';
-import './scenes/statusBar';
-import './libs/Animate';
-import './update';
+require('./scenes/game');
+require('./scenes/changeFloor');
+require('./scenes/toolBar');
+require('./scenes/statusBar');
+require('./libs/Animate');
+require('./update');
 
 console.log('loadFirst');
 window.$ = $;
 
-app.ticker.add(() => {
+app.ticker.add(function () {
   Fresh.update();
   TWEEN.update();
   nodes.update();
+  fps.text = app.ticker.FPS;
 });
 const pixi = {
   TWEEN,
@@ -51,7 +52,9 @@ const pixi = {
   weather,
   hero,
   interaction: app.renderer.plugins.interaction,
-  canvasRenderer: new $.CanvasRenderer(),
+  canvasRenderer: new $.CanvasRenderer({
+    transparent: true,
+  }),
   Easing: TWEEN.Easing.Quadratic.InOut,
   main: app.stage,
   ticker: app.ticker,

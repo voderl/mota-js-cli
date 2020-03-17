@@ -180,58 +180,6 @@ loadImages().then(() => {
         console.log(`写入${name}成功`);
       });
   };
-  Object.keys(blockIds).forEach((numId) => {
-    const num = parseInt(numId, 10);
-    const block = getBlock(num);
-    if (!block) return;
-    const {
-      image, posX, posY, animate, alone, id, height,
-    } = block;
-    if (!image) return;
-    info[id] = { num, animate };
-    _maps[numId] = block;
-    delete block.image;
-    delete block.alone;
-    delete block.posX;
-    delete block.height;
-    delete block.posY;
-    delete block.animate;
-    if (alone) {
-      image.getBuffer(Jimp.MIME_PNG, (err, imageBuffer) => {
-        if (err) throw err;
-        blocksBuffer[id] = imageBuffer;
-      });
-      return;
-    }
-    // load promise 加入数组
-    const temp = new Jimp(32 * animate, height, (err, img) => {
-      if (err) throw err;
-      img.blit(image, 0, 0, posX * 32, posY * height, 32 * animate, height)
-        .getBuffer(Jimp.MIME_PNG, (err, buffer) => {
-          if (err) throw err;
-          if (blocksBuffer[id]) console.log(`额外图片里有重名id"${id}"`);
-          blocksBuffer[id] = buffer;
-        });
-    });
-  });
-  // write info
-  writeFile('_info.json', JSON.stringify(info));
-  writeFile('_maps.json', JSON.stringify(_maps));
-  // 加载icons
-  (function () {
-    const iconsData = main.icons;
-    const iconsImg = main.images.icons;
-    Object.keys(iconsData).forEach(id => {
-      const temp = new Jimp(32, 32, (err, img) => {
-        if (err) throw err;
-        img.blit(iconsImg, 0, 0, 0, iconsData[id] * 32, 32, 32)
-          .getBuffer(Jimp.MIME_PNG, (err, buffer) => {
-            if (err) throw err;
-            blocksBuffer[id] = buffer;
-          });
-      });
-    });
-  }());
   // 加载额外images
   (function () {
     const { extraImages } = main.images;
@@ -263,6 +211,70 @@ loadImages().then(() => {
       });
     });
   }());
+  Object.keys(blockIds).forEach((numId) => {
+    const num = parseInt(numId, 10);
+    const block = getBlock(num);
+    if (!block) return;
+    const {
+      image, posX, posY, animate, alone, id, height,
+    } = block;
+    if (!image) return;
+    if (blocksBuffer[id]) {
+      info[id] = { num, animate: 1 };
+      _maps[numId] = block;
+      delete block.image;
+      delete block.alone;
+      delete block.posX;
+      delete block.height;
+      delete block.posY;
+      delete block.animate;
+      return;
+    }
+    info[id] = { num, animate };
+    _maps[numId] = block;
+    delete block.image;
+    delete block.alone;
+    delete block.posX;
+    delete block.height;
+    delete block.posY;
+    delete block.animate;
+    if (alone) {
+      image.getBuffer(Jimp.MIME_PNG, (err, imageBuffer) => {
+        if (err) throw err;
+        blocksBuffer[id] = imageBuffer;
+      });
+      return;
+    }
+    // load promise 加入数组
+    const temp = new Jimp(32 * animate, height, (err, img) => {
+      if (err) throw err;
+      img.blit(image, 0, 0, posX * 32, posY * height, 32 * animate, height)
+        .getBuffer(Jimp.MIME_PNG, (err, buffer) => {
+          if (err) throw err;
+          if (blocksBuffer[id]) console.log(`额外图片里有重名id"${id}"`);
+          blocksBuffer[id] = buffer;
+        });
+    });
+  });
+  // write info
+  writeFile('_info.json', JSON.stringify(info)); // id to num
+  writeFile('_maps.json', JSON.stringify(_maps)); // num to data
+  // 加载icons
+  (function () {
+    const iconsData = main.icons;
+    const iconsImg = main.images.icons;
+    Object.keys(iconsData).forEach(id => {
+      const temp = new Jimp(32, 32, (err, img) => {
+        if (err) throw err;
+        img.blit(iconsImg, 0, 0, 0, iconsData[id] * 32, 32, 32)
+          .getBuffer(Jimp.MIME_PNG, (err, buffer) => {
+            if (err) throw err;
+            blocksBuffer[id] = buffer;
+          });
+      });
+    });
+  }());
+  
   // 加载animate 是否存在其余文件
   (function () {
     const { animatesBuffer } = main.images;
@@ -280,6 +292,7 @@ loadImages().then(() => {
       detectIdentical: false,
       width: 512,
       height: 512,
+      padding: 1,
     };
     const { outputPath } = main;
     Object.keys(blocksBuffer).forEach((id) => images.push({

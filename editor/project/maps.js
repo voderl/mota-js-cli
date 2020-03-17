@@ -102,6 +102,7 @@ var maps_90f36752_8815_4be8_b32b_d7fad1d0542e =
 	"134": {"cls":"npc48","id":"npc1","faceIds":{"down":"npc0","left":"npc1","right":"npc2","up":"npc3"}},
 	"135": {"cls":"npc48","id":"npc2","faceIds":{"down":"npc0","left":"npc1","right":"npc2","up":"npc3"}},
 	"136": {"cls":"npc48","id":"npc3","faceIds":{"down":"npc0","left":"npc1","right":"npc2","up":"npc3"}},
+	"140": {"cls":"autotile","id":"autotile4","noPass":true},
 	"151": {"cls":"autotile","id":"autotile1","noPass":true},
 	"152": {"cls":"autotile","id":"autotile2","noPass":true},
 	"153": {"cls":"autotile","id":"autotile3","noPass":true},
