@@ -1,224 +1,238 @@
-// 节点系统 相当于sprite的拓展
 /**
  * extend Sprite to Node
+ * 拓展pixi的基础sprite,text等 增加原型方法
+ * 删除 应该就直接删除，如果要控制触发删除时比如淡出效果，应零设一个函数 触发删除
+ * 设置一个属性easingFunction ？ 如果有属性则淡出，没有属性直接删除
+ * EventEmitter 删除  总体事件 
  */
 import * as $ from 'pixi.js-legacy';
 import TWEEN from '@tweenjs/tween.js';
 import utils from './utils';
 
 // tween 请求一个公用的tween request 如果有请求就开始  如何判断 是否结束
-function _nodes() {
-  this.activeNodes = [];
-  this.types = {};
-  this.Renders = {};
-}
-_nodes.prototype.update = function () {
-  const node = this.activeNodes;
-  let temp;
-  for (let i = 0; i < node.length; i++) {
-    temp = node[i];
-    if (temp._destroyed) {
-      node.splice(i, 1);
-      i -= 1;
-    } else if (temp.parent !== null) {
-      temp._update();
-    }
-  }
-};
-// 将这些方法放入原型链
-_nodes.prototype.default = {
-  getTween(to, time, callback) {
-    if (!this.tweens) this.tweens = [];
-    const changing = new TWEEN.Tween(this)
-      .to(to, time);
-    if (callback)changing.onComplete(callback);
-    this.tweens.push(changing);
-    return changing;
+/**
+ * 
+ */
+/**
+ * nodes 系统，需要更新的node加入activeNodes中
+ */
+const nodes = {
+  activeNodes: [],
+  types: [],
+  Renders: [],
+  /**
+   * 加入原型链中的方法
+   */
+  default: {
+    /**
+     * 获取一个Tween，此tween并未直接开始，用于使用一些delay
+     * @param {*} time - 转换时间
+     * @param {*} callback - 回调函数
+     * @param {Object} [data = this] - 要转换的对象，默认为本身，如果要改scale，就设置为node.scale
+     */
+    getTween(to, time, data = this) {
+      if (!this.tweens) this.tweens = [];
+      const changing = new TWEEN.Tween(data)
+        .to(to, time);
+      this.tweens.push(changing);
+      return changing;
+    },
+    /**
+     * 参数为两个  to time
+     * 3个  to time callback  ||  from to time
+     * 4个  from to time callback
+     */
+    changeTo(from, to, time, callback) {
+      this.tweens = this.tweens || [];
+
+      const { length } = arguments;
+      if (typeof length <= 2 || (length === 3 && time === 'function')) {
+        callback = time;
+        time = to;
+        to = from;
+      } else Object.assign(this, from);
+      const changing = new TWEEN.Tween(this)
+        .to(to, time);
+      if (callback)changing.onComplete(callback);
+      changing.start();
+      this.tweens.push(changing);
+      return changing;
+    },
+    loop(from, to, time, repeat = Infinity) {
+      this.tweens = this.tweens || [];
+      Object.assign(this, from);
+      const changing = new TWEEN.Tween(this)
+        .to(to, time).repeat(repeat).yoyo(true);
+      changing.start();
+      this.tweens.push(changing);
+      return changing;
+    },
+    // 删除过程参数 可被更改与自定义
+    removing(callback) {
+      return callback();
+    },
+    remove(easing, cb) {
+      if (this._removing) return null;
+      this._removing = true;
+      if (typeof easing === 'function') {
+        return easing(() => {
+          this._remove(cb);
+        });
+      }
+      return this._remove();
+    },
+    // 实际上的删除
+    _remove(cb) {
+      const {
+        parent, tweens, destroyOptions, children,
+      } = this;
+      if (children.length !== 0) {
+        const oldChildren = this.removeChildren(0, children.length);
+        for (let i = 0; i < oldChildren.length; ++i) {
+          oldChildren[i].remove();
+        }
+      }
+      if (parent) parent.removeChild(this);
+      if (typeof cb === 'function') cb();
+      if (tweens) {
+        tweens.forEach((tween) => {
+          tween.destroy();
+        });
+        this.tweens = null;
+      }
+      this.destroy(destroyOptions);
+    },
+    addNode(type, options) {
+      const node = type instanceof $.Sprite ? type : pixi.nodes.getNode(type, options);
+      if (node.zIndex !== 0 && !this.sortableChildren) this.sortableChildren = true;
+      this.addChild(node);
+      return node;
+    },
+    destroyOptions: {
+      children: true,
+      texture: false,
+      baseTexture: false,
+    },
   },
-  changeTo(from, to, time, callback) {
-    this.tweens = this.tweens || [];
-    // 参数为两个  to time
-    // 3个  to time callback  ||  from to time
-    // 4个  from to time callback
-    const { length } = arguments;
-    if (length <= 2 || (length === 3 && time instanceof Function)) {
-      callback = time;
-      time = to;
-      to = from;
-    } else Object.assign(this, from);
-    const changing = new TWEEN.Tween(this)
-      .to(to, time);
-    if (callback)changing.onComplete(callback);
-    changing.start();
-    this.tweens.push(changing);
-    return changing;
-  },
-  loop(from, to, time, repeat = Infinity) {
-    this.tweens = this.tweens || [];
-    Object.assign(this, from);
-    const changing = new TWEEN.Tween(this)
-      .to(to, time).repeat(repeat).yoyo(true);
-    changing.start();
-    this.tweens.push(changing);
-    return changing;
-  },
-  // 删除过程参数 可被更改与自定义
-  removing(callback) {
-    return callback();
-  },
-  remove(cb) {
-    if (this._removing) return;
-    this._removing = true;
-    this.removing(() => {
-      this._remove(cb);
-    });
-  },
-  // 实际上的删除
-  _remove(cb) {
-    const {
-      parent, tweens, destroyOptions, children,
-    } = this;
-    if (children.length !== 0) {
-      const oldChildren = this.removeChildren(0, children.length);
-      for (let i = 0; i < oldChildren.length; ++i) {
-        oldChildren[i].remove();
+  update() {
+    const node = this.activeNodes;
+    if (node.length === 0) return;
+    let temp;
+    for (let i = 0; i < node.length; i++) {
+      temp = node[i];
+      if (temp._destroyed) {
+        node.splice(i, 1);
+        i -= 1;
+      } else if (temp.parent !== null) {
+        temp._update();
       }
     }
-    if (parent) parent.removeChild(this);
-    if (cb instanceof Function) cb();
-    if (tweens) {
-      tweens.forEach((tween) => {
-        tween.destroy();
-      });
-      this.tweens = null;
+  },
+  /**
+   * 注册一个类型， obj为该类型执行的参数
+   * @param {string} name - name
+   * @param {Object} obj - 参数
+   */
+  register(name, obj) {
+    this.types[name] = obj;
+  },
+  /**
+   * 注册一个constructor，该function原型由给定原型和 default里的函数 和附加的一些函数组成
+   * @param {string} name - 注册constructor的名字
+   * @param {string|Object} proto - 注册原型的prototype 或者 在pixi中的名字
+   * @param {Object} add - 附加的函数 
+   */
+  registerRender(name, proto, add) {
+    if (name instanceof Array) return name.forEach(_name => this.registerRender(_name));
+    let data = Object.create(this.default);
+    if (typeof add === 'object') data = Object.assign(data, add);
+    if (typeof proto !== 'function') proto = $[proto] || $[name];
+    const Render = this.getRender(proto);
+    for (const n in data) {
+      if (Render.prototype[n]) console.warn(`${name}在注册Render时已有同名属性${n}`);
+      else Render.prototype[n] = data[n];
     }
-    this.destroy(destroyOptions);
+    this.Renders[name] = Render;
+    return Render;
   },
-  addNode(type, options) {
-    if (type instanceof Array) return type.forEach((item) => { this.addNode(item[0], item[1]); });
-    const node = type instanceof $.DisplayObject ? type : pixi.nodes.getNode(type, options);
-    if (node.zIndex !== 0 && !this.sortableChildren) this.sortableChildren = true;
-    this.addChild(node);
-    return node;
-  },
-  destroyOptions: {
-    children: true,
-    texture: false,
-    baseTexture: false,
-  },
-};
-_nodes.prototype.register = function (name, obj) {
-  // 参数 放入原型链 ？ 不太能吧 ？ 因为不确定原型链
-  this.types[name] = obj;
-};
-_nodes.prototype.registerRender = function (name, proto, add) {
-  if (name instanceof Array) return name.forEach(_name => this.registerRender(_name));
-  let data = Object.create(this.default);
-  if (add instanceof Object)data = Object.assign(data, add);
-  proto = proto instanceof Object ? proto : ($[proto] ? $[proto] : $[name]);
-  const Render = this.getRender(proto);
-  for (const n in data) {
-    if (Render.prototype[n]) console.warn(`${name}在注册Render时已有同名属性${n}`);
-    else Render.prototype[n] = data[n];
-  }
-  this.Renders[name] = Render;
-  return Render;
-};
-/**
- * 生成Render
+  /**
+ * 生成constructor, 是否 直接生成一个node顺利一点? 
  * @constructor
  */
-_nodes.prototype.getRender = function (RenderPrototype) {
-  if (RenderPrototype.prototype)RenderPrototype = RenderPrototype.prototype;
-  function node(...args) {
-    RenderPrototype.constructor.apply(this, args);
-  }
-  node.prototype = Object.create(RenderPrototype);
-  node.prototype.constructor = node;
-  return node;
-};
-
-// _nodes.prototype.getNodes = function (type, num, options) {
-//   const typeData = this.types[type];
-//   const nodes = [];
-//   const Render = typeData.Render instanceof Function ? typeData.Render
-//     : this.Renders(typeData.Render);
-//   if (typeData.Render instanceof Function) {
-//     for (let i = 0; i < num; i++) {
-//       const node = Render(this.Renders, options);
-//       nodes.push(node);
-//     }
-//   } else {
-//     for (let i = 0; i < num; i++) {
-//       const node = new Render();
-//       nodes.push(node);
-//     }
-//   }
-//   return nodes;
-// };
-_nodes.prototype.setNode = function (node, options = {}) {
-  const {
-    start, event, data, update, destroy, init,
-  } = options;
-
-  if (destroy) node.destroyOptions = destroy;
-
-  if (init instanceof Function) init.apply(node);
-
-  // 添加start
-  if (start instanceof Function) {
-    if (node.parent) start.init(node);
-    else node.addListener('added', start);
-  }
-  // 添加update 如果 有
-  if (update instanceof Function) {
-    node._update = update;
-    this.activeNodes.push(node);
-  }
-  if (event instanceof Object) {
-    node.interactive = true;
-    Object.keys(event).forEach((name) => {
-      node.addListener(name, event[name]);
-    });
-  }
-  if (data instanceof Object) {
-    for (const n in data) {
-      if (data[n] instanceof Object && node[n])Object.assign(node[n], data[n]);
-      else node[n] = data[n];
+  getRender(RenderPrototype) {
+    if (RenderPrototype.prototype)RenderPrototype = RenderPrototype.prototype;
+    function node(...args) {
+      RenderPrototype.constructor.call(this, ...args);
     }
-  }
-  options = null;
-  return node;
-};
-_nodes.prototype.getNode = function (type, options = {}) {
-  let node;
-  const typeData = this.types[type];
-  // 生成函数
-  if (typeData.Render instanceof Function) {
-    node = typeData.Render(this.Renders, options);
-  } else node = new this.Renders[typeData.Render]();
+    node.prototype = Object.create(RenderPrototype);
+    node.prototype.constructor = node;
+    return node;
+  },
+  setNode(node, options = {}) {
+    const {
+      start, event, data, update, destroy, init,
+    } = options;
 
-  if ((typeData.init && typeData.init.call(node, options))) return node;
-  if (!(options instanceof Object) || options.disable) return node;
-  // destroy 参数
-  // 如果有更新加入更新队列  加入不到原型里  分解开来？ 多个原型？
-  // update 是 一组 还是 一个  加入到原型 ？
-  if (typeData.update instanceof Function) {
-    options.update = typeData.update;
-  }
+    if (destroy) node.destroyOptions = destroy;
 
-  // init 是对node的处理  以下为默认处理  如果有handle的话则只执行handle
-  // node 的 update ？ 如果有update 则在node的active node里加入
-  // register里就注册的  不是options
-  // node.scene=options.scene;
-  return this.setNode(node, options);
+    if (typeof init === 'function') init.apply(node);
+
+    // 添加start
+    if (typeof start === 'function') {
+      if (node.parent) start.init(node);
+      else node.addListener('added', start);
+    }
+    // 添加update 如果 有
+    if (typeof update === 'function') {
+      node._update = update;
+      this.activeNodes.push(node);
+    }
+    if (typeof event === 'object') {
+      node.interactive = true;
+      Object.keys(event).forEach((name) => {
+        node.addListener(name, event[name]);
+      });
+    }
+    if (typeof data === 'object') {
+      for (const n in data) {
+        if (typeof data[n] === 'object' && node[n])Object.assign(node[n], data[n]);
+        else node[n] = data[n];
+      }
+    }
+    options = null;
+    return node;
+  },
+  getNode(type, options = {}) {
+    let node;
+    const typeData = this.types[type];
+    // 生成函数
+    if (typeof typeData.Render === 'function') {
+      node = typeData.Render(this.Renders, options);
+    } else node = new this.Renders[typeData.Render]();
+
+    if ((typeData.init && typeData.init.call(node, options))) return node;
+    if (!(options instanceof Object) || options.disable) return node;
+    // destroy 参数
+    // 如果有更新加入更新队列  加入不到原型里  分解开来？ 多个原型？
+    // update 是 一组 还是 一个  加入到原型 ？
+    if (typeof typeData.update === 'function') {
+      options.update = typeData.update;
+    }
+
+    // init 是对node的处理  以下为默认处理  如果有handle的话则只执行handle
+    // node 的 update ？ 如果有update 则在node的active node里加入
+    // register里就注册的  不是options
+    // node.scene=options.scene;
+    return this.setNode(node, options);
+  },
 };
+
+
 // 节点的生成参数：
 
 // 在加入的时候就生成了一个该节点的proto，在show的时候new 一个
 // 加入一种节点类型   提供一些参数，输入参数即可生成一个不一样的节点
 // 注册节点类型
-const nodes = new _nodes();
 nodes.registerRender(['Sprite', 'Text', 'AnimatedSprite', 'Graphics',
   'TilingSprite']);
 /* proto       ： 最基本原型链
