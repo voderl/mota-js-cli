@@ -95,9 +95,9 @@ var data_a1e2fb4a_e986_4524_b0da_9b7ba7c0874d =
 			"equipment": [],
 			"items": {
 				"keys": {
-					"yellowKey": 0,
-					"blueKey": 0,
-					"redKey": 0
+					"yellowKey": 5,
+					"blueKey": 5,
+					"redKey": 5
 				},
 				"constants": {"book": 1},
 				"tools": {},
