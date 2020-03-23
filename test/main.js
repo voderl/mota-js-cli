@@ -11,10 +11,33 @@ require('./data/first');
 require('./data/second');
 
 console.log('third');
+// Test 
+// var n = 100000000;
+// var a = function(){};
+// console.time();
+// for (let i = 0; i < n; i++){
+//     if(typeof a === 'function'){};
+// } 
+// console.timeEnd();
+// console.time();
+// for (let i = 0; i < n; i++){
+//     if(a){};
+// } 
+// console.timeEnd();
+// console.time();
+// for (let i = 0; i < n; i++){
+//     if(a instanceof Function){};
+// } 
+// console.timeEnd();
 
-
-
-
+const time = (func, times = 1000000) => {
+  const name = func.name || null;
+  console.time(name);
+  for (let i = 0; i < times; i++) {
+    func();
+  }
+  console.timeEnd(name);
+};
 // import Dexie from 'dexie';
 
 // /**

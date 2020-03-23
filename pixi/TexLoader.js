@@ -124,6 +124,7 @@ class TexLoader {
 
   // 如果有动画，将textures分割成数组, 同时处理hero成易处理的格式
   static handleTextures(textures) {
+    handle(textures);
     const { _info: info } = textures;
     if (!(info instanceof Object)) return;
     const list = Object.keys(info);
@@ -131,10 +132,9 @@ class TexLoader {
       const { animate } = info[id];
       if (animate === 1) return;
       const texture = textures[id];
+      if (!(texture instanceof $.Texture)) return;
       [textures[id]] = ui.splitTexture(texture, 1, animate);
     });
-    // textures.hero = this.handleHero(textures.hero);
-    handle(textures);
   }
 
   static handleHero(hero) {

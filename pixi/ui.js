@@ -94,6 +94,119 @@ const ui = {
     }
     return null;
   },
+  resizeTo(from, to, arr) {
+    if (!(from instanceof Object)) return;
+    if (!(to instanceof Object)) return;
+    if (from._destroyed || to._destroyed) return;
+    let x; let y;
+    if (to.anchor) {
+      x = to.x - to.anchor.x * to.width,
+      y = to.y - to.anchor.y * to.height;
+    } else {
+      x = to.x, y = to.y;
+    }
+    if (from.anchor) {
+      from.anchor.set(0, 0);
+    }
+    const [top, right, bottom, left] = this.getPadding(arr);
+    from.x = x - left;
+    from.y = y - top;
+    from.width = to.width + left + right, from.height = to.height + bottom + top;
+  },
+  drawConfirmBox(text, yesCallback, noCallback) {
+    core.lockControl();
+    text = core.replaceText(text || '');
+
+    // 处理自定义事件
+    if (core.status.event.id != 'action') {
+      core.status.event.id = 'confirmBox';
+      core.status.event.ui = text;
+      core.status.event.data = { yes: yesCallback, no: noCallback };
+    }
+    if (core.status.event.selection != 0) core.status.event.selection = 1;
+    const ui = pixi.scenes.getScene('ui');
+    const contents = text.split('\n');
+    const rect = core.ui._drawConfirmBox_getRect(contents);
+    pixi.ui.fillRect(ui, rect.left, rect.top, rect.width, rect.height, {
+      fillAlpha: 0.6,
+      radius: 0.2,
+    });
+    const textStyle = pixi.ui.getTextStyle({
+
+    });
+    const len = core.calWidth('ui', '确定');
+    const border = ui.addNode('border', {
+      radius: 0.2,
+      zone: [0, 0, 60, 30],
+      lineColor: 'rgb(255, 215, 0)',
+      init() {
+        this.loop({
+          alpha: 0.3,
+        }, {
+          alpha: 1,
+        }, 500);
+      },
+    });
+    for (const i in contents) {
+      ui.addNode('text', {
+        text: contents[i],
+        style: textStyle,
+        data: {
+          x: core.ui.HPIXEL,
+          y: rect.top + 50 + i * 30,
+          anchor: {
+            x: 0.5,
+            y: 0.5,
+          },
+        },
+      });
+    }
+    const yes = ui.addNode('text', {
+      text: '确定',
+      style: textStyle,
+      data: {
+        x: core.ui.HPIXEL - 38,
+        y: rect.bottom - 35,
+        anchor: {
+          x: 0.5,
+          y: 0.5,
+        },
+      },
+      event: {
+        pointertap() {
+          pixi.ui.resizeTo(border, this);
+          console.log('you Click ok');
+        },
+      },
+    });
+    window.yes = yes;
+    const no = ui.addNode('text', {
+      text: '取消',
+      style: textStyle,
+      data: {
+        x: core.ui.HPIXEL + 38,
+        y: rect.bottom - 35,
+        anchor: {
+          x: 0.5,
+          y: 0.5,
+        },
+      },
+      event: {
+        pointertap() {
+          pixi.ui.resizeTo(border, this);
+          console.log('you Click no');
+        },
+      },
+    });
+    const select = core.status.event.selection ? yes : no;
+    this.resizeTo(border, select);
+    // var strokeLeft = core.ui.HPIXEL + (76*core.status.event.selection-38) - parseInt(len/2) - 5;
+
+    // if (isWindowSkin)
+    //     this.drawWindowSelector(core.status.textAttribute.background, strokeLeft, rect.bottom-35-20, len+10, 28);
+    // else
+    //     core.strokeRect('ui', strokeLeft, rect.bottom-35-20, len+10, 28, "#FFD700", 2);
+  },
   /**
    * 将一个texture分割成对象或数组
    * @param {*} texture
@@ -106,6 +219,33 @@ const ui = {
     return this._splitTexture(h, row,
       (dy, y) => this._splitTexture(w, col,
         (dx, x) => this.split(texture, x * dx, y * dy, dx, dy)));
+  },
+  /**
+   * 按列切割
+   */
+  splitTextureByCol(texture, col, row) {
+    if (!(texture instanceof Texture)) return null;
+    const { orig: { width: w, height: h } } = texture;
+    return this._splitTexture(w, col,
+      (dx, x) => this._splitTexture(h, row,
+        (dy, y) => this.split(texture, x * dx, y * dy, dx, dy)));
+  },
+  _splitTexture(len, data, func) {
+    let result;
+    if (data instanceof Array) {
+      result = {};
+      const d = len / data.length;
+      data.forEach((n, i) => {
+        result[n] = func(d, i);
+      });
+    } else {
+      result = [];
+      const d = len / data;
+      for (let i = 0; i < data; i++) {
+        result[i] = func(d, i);
+      }
+    }
+    return result;
   },
   /**
    * 分割Texture 由于trim的存在，因此较为复杂
@@ -165,23 +305,6 @@ const ui = {
       newtrim,
       _rotate,
     );
-  },
-  _splitTexture(len, data, func) {
-    let result;
-    if (data instanceof Array) {
-      result = {};
-      const d = len / data.length;
-      data.forEach((n, i) => {
-        result[n] = func(d, i);
-      });
-    } else {
-      result = [];
-      const d = len / data;
-      for (let i = 0; i < data; i++) {
-        result[i] = func(d, i);
-      }
-    }
-    return result;
   },
   getHeroTexture(fullName, direction = 'down') {
     const [name, ext] = utils.parseName(fullName);
@@ -290,6 +413,34 @@ const ui = {
     graphics.drawRect(...zone);
     graphics.endFill();
     scene.container.mask = graphics;
+  },
+  drawAnimate(animate, scene, x, y, options) {
+    if (!(animate instanceof Object)) {
+      animate = core.material.animates[animate];
+    }
+    if (!(scene instanceof Object)) {
+      scene = pixi.scenes.getScene(scene);
+    }
+    if (options.async) {
+      this.setAsyncAnimate((cb) => {
+        animate.play(scene, x, y, {
+          ...options,
+          onComplete() {
+            if (options.onComplete instanceof Function) options.onComplete.apply(this);
+            cb();
+          },
+        });
+      });
+      return;
+    }
+    animate.play(scene, x, y, options);
+  },
+  setAsyncAnimate(func) {
+    const id = utils.getId();
+    core.animateFrame.asyncId[id] = true;
+    func(() => {
+      delete core.animateFrame.asyncId[id];
+    });
   },
   getHeroDrawObj() {
     const heroIconArr = core.material.icons.hero;

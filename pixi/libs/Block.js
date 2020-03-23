@@ -56,8 +56,9 @@ Block.get = function (id, x, y, _addInfo, eventFloor) {
 
 Block.getNumberById = function (id) {
   if (Number.isInteger(id)) return id;
-  num = parseInt(id, 10);
+  let num = parseInt(id, 10);
   if (Number.isNaN(num)) num = (idToNumber[id] || {}).num;
+  return num;
 };
 
 Block.getBlockByNumber = function (num) {
