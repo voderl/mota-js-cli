@@ -1,21 +1,20 @@
 /**
  * 用于加载动画文件，和动画的播放
+ * 为了所有动画参数的统一，在此具体使用Animation来播放，效率可能有不足
  */
 import { Texture } from 'pixi.js-legacy';
-import loader from '../TexLoader';
 import nodes from '../nodes';
 import Scene from '../Scene';
 import event from '../event';
+import Animation from './Animation';
 
-const { textures } = loader;
-const { animates } = textures;
 const getTextures = (name, bitmaps) => bitmaps.slice(0, bitmaps.lastIndexOf(1) + 1).map(
   (value, i) => {
     if (value) {
       const id = `${name}-${i}`;
-      const result = textures[id];
+      const result = pixi.textures[id];
       if (result) {
-        delete textures[id];
+        delete pixi.textures[id];
         return result;
       }
       return Texture.EMPTY;
@@ -57,7 +56,7 @@ const setNode = (node, value) => {
 };
 class Animate {
   constructor(name) {
-    const content = animates[name];
+    const content = pixi.textures.animates[name];
     if (!(content instanceof Object)) return null;
     const {
       bitmaps, frame_max: max, frames, ratio,
@@ -66,9 +65,11 @@ class Animate {
     this.textures = getTextures(name, bitmaps);
     this.frame = max;
     this.frames = parseFrames(frames, ratio);
+    // this.texturesArr = this.getTexturesArr();
+    this.animations = this.getTexturesArr().map(arr => new Animation(arr));
   }
 
-  getSprites() {
+  getTexturesArr() {
     const { EMPTY } = Texture;
     const list = [];
     const { frame, frames, textures } = this;
@@ -78,7 +79,41 @@ class Animate {
         list[j][i] = textures[value.index];
       });
     });
-    const sprites = list.map((arr, i) => {
+    return list;
+  }
+
+  play(scene, x, y, options = {}) {
+    options.time = options.time || 50;
+    const { EMPTY } = Texture;
+    const { frames, frame } = this;
+    const len = this.animations.length;
+    this.animations.forEach((a, i) => {
+      const _options = {
+        ...options,
+        init() {
+          this.defaultX = x;
+          this.defaultY = y;
+          if (options.init instanceof Function) options.init.apply(this);
+        },
+        onFrameChange(j) {
+          if (this.texture === EMPTY) return;
+          setNode(this, frames[j % frame][i]);
+          if (options.onFrameChange instanceof Function) options.onFrameChange.apply(this, j);
+        },
+      };
+      if (i === len - 1 && options.onComplete instanceof Function) {
+        _options.onComplete = function () {
+          if (options.onComplete instanceof Function) options.onComplete.apply(this);
+        };
+      }
+      const node = a.play(scene, x, y, _options);
+    });
+  }
+
+  getSprites() {
+    const { EMPTY } = Texture;
+    const { frames } = this;
+    const sprites = this.texturesArr.map((arr, i) => {
       const node = nodes.getNode('sprite', {
         texture: arr,
         time: 50,
@@ -109,7 +144,7 @@ class Animate {
     return sprites;
   }
 
-  play(scene, x = 0, y = 0, update, cb) {
+  play2(scene, x = 0, y = 0, update, cb) {
     if (!(scene instanceof Scene)) {
       scene = pixi.game.getScene(scene);
       if (!(scene instanceof Scene)) return false;
@@ -135,12 +170,4 @@ class Animate {
     return true;
   }
 }
-
-event.once('loadComplete', (textures) => {
-  const { animates } = textures;
-  const data = {};
-  Object.keys(animates).forEach(id => {
-    data[id] = new Animate(id);
-  });
-  core.material.animates = data;
-});
+export default Animate;
