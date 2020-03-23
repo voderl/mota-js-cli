@@ -292,7 +292,7 @@ loadImages().then(() => {
       detectIdentical: false,
       width: 512,
       height: 512,
-      padding: 1,
+      padding: 0,
     };
     const { outputPath } = main;
     Object.keys(blocksBuffer).forEach((id) => images.push({
