@@ -12,11 +12,18 @@ const clearAutomaticRouteNode = (x, y) => {
   const node = nodes.shift();
   node.remove();
 };
+const hideNode = (node) => {
+  node.changeTo({
+    alpha: 0,
+  }, 500, () => {
+    node.remove();
+  });
+};
 
 const clear = () => {
-  points.forEach(node => node.remove());
+  points.forEach(node => hideNode(node));
   points = [];
-  nodes.forEach(node => node.remove());
+  nodes.forEach(node => hideNode(node));
   nodes = [];
 };
 
@@ -54,7 +61,6 @@ const drawEnd = (x, y) => {
   const node = show.addNode('sprite', {
     texture: Texture.ROUNDWHITE,
     init() {
-      this.removing = removing;
       this.loop({
         alpha: 0.3,
       }, {
@@ -88,8 +94,11 @@ const wrong = (x, y) => {
   const node = drawPoint(x, y);
   node.texture = Texture.RED;
   node.scale.set(1, 1);
-  node.removing = removing;
-  node.remove();
+  node.changeTo({
+    alpha: 0,
+  }, 500, () => {
+    node.remove();
+  });
 };
 
 const route = {

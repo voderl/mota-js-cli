@@ -68,7 +68,9 @@ const tip = {
         }, 500, () => {
           this.getTween({
             alpha: 0,
-          }, 500, () => { this.remove(); }).delay(800).start();
+          }, 500)
+            .onComplete(() => { this.remove(); })
+            .delay(800).start();
         });
       },
     });

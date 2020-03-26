@@ -119,7 +119,7 @@ const weather = {
       });
       return false;
     }
-    const scene = pixi.scenes.getScene(`weather-${type}`, 1);
+    const scene = weatherScene.getScene(`weather-${type}`, 1);
     if (!scene) return false;
     scene.destroy();
     return true;
@@ -156,11 +156,6 @@ event.once('loadComplete', () => {
         this.resize();
       } else if (this.x < 0) this.x = style.W;
       else if (this.x > style.W) this.x = 0;
-    },
-    removing(callback) {
-      this.changeTo({
-        alpha: 0,
-      }, 1000, callback);
     },
   });
 });

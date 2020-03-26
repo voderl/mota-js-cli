@@ -31,6 +31,6 @@ module.exports = {
     'no-trailing-spaces': ["error", { "ignoreComments": true }],
     "max-classes-per-file": ["error", 2],
     'prefer-arrow-callback': 1,
-
+    'func-names': ["warn", "as-needed"],
   },
 };

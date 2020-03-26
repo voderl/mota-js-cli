@@ -181,7 +181,7 @@ const maps = {
   moveBlockOneStep(block, node, moveSteps, time, callback) {
     const dir = moveSteps.shift();
     if (!dir) {
-      node.remove();
+      node.remove(node.removing);
       if (callback instanceof Function) callback();
       return;
     }

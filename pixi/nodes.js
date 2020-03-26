@@ -1,33 +1,92 @@
 /**
  * extend Sprite to Node
  * 拓展pixi的基础sprite,text等 增加原型方法
- * 删除 应该就直接删除，如果要控制触发删除时比如淡出效果，应零设一个函数 触发删除
- * 设置一个属性easingFunction ？ 如果有属性则淡出，没有属性直接删除
- * EventEmitter 删除  总体事件 
+ * 使用tween做补间动画
  */
 import * as $ from 'pixi.js-legacy';
 import TWEEN from '@tweenjs/tween.js';
 import utils from './utils';
 
-// tween 请求一个公用的tween request 如果有请求就开始  如何判断 是否结束
 /**
- * 
- */
-/**
- * nodes 系统，需要更新的node加入activeNodes中
+ * nodes 系统
+ * @namespace
  */
 const nodes = {
+  /** 每进行一帧，frames += 1 */
+  frames: 0,
+  /** 需要更新的node，每帧更新一次 */
   activeNodes: [],
-  types: [],
-  Renders: [],
+  /** 
+   * 由于大量node采用一致的动画时间，在此改变animateSprite的实现，相同刷新时间的node同步刷新
+   * animationList 示例 { 60(表明每60帧更新一次): [node, node ...(需要更新的node)]}
+   * 由于可帧的开始时间可能不同而同步刷新， 开始第一帧可能会出现丢帧现象。
+   * 如果有必要添加node的参数animate = true来独立刷新。
+   */
+  animationList: {},
+  types: {},
+  Renders: {},
+  /**
+   * animateSprite加入更新队列
+   * @param {number} frame - 每多少帧更新一次
+   * @param {*} nodes - 加入的node
+   */
+  addAnimation(frame, nodes) {
+    const { animationList } = this;
+    let data = animationList[frame];
+    if (!data) {
+      data = [];
+      animationList[frame] = data;
+    }
+    if (!(nodes instanceof Array)) data.push(nodes);
+    else data.concat(nodes);
+  },
+  /**
+   * 主体更新进程
+   */
+  update() {
+    this.frames += 1;
+    const node = this.activeNodes;
+    if (node.length === 0) return;
+    this.activeNodes = node.filter((e) => {
+      if (e._destroyed) return false;
+      if (e.parent !== null) {
+        e._update();
+        return true;
+      }
+      return true;
+    });
+    this.updateAnimation();
+  },
+  /**
+   * animateSprite的实际更新过程
+   */
+  updateAnimation() {
+    const { animationList } = this;
+    const { filter } = utils;
+    Object.keys(animationList).forEach((frames) => {
+      if (this.frames % frames === 0) {
+        const nodes = animationList[frames];
+        filter(nodes, (e) => {
+          if (e._destroyed) return false;
+          if (e.parent !== null) {
+            e.updateOneFrame();
+            return true;
+          }
+          return true;
+        });
+        if (nodes.length === 0) delete animationList[frames];
+      }
+    });
+  },
   /**
    * 加入原型链中的方法
    */
   default: {
     /**
-     * 获取一个Tween，此tween并未直接开始，用于使用一些delay
+     * 获取一个Tween，此tween并未直接开始，由于直接使用tween，不会在node被remove后自动删除掉
+     * 因此通过此函数获取tween
+     * @param {*} to - 转变后的状态
      * @param {*} time - 转换时间
-     * @param {*} callback - 回调函数
      * @param {Object} [data = this] - 要转换的对象，默认为本身，如果要改scale，就设置为node.scale
      */
     getTween(to, time, data = this) {
@@ -44,9 +103,8 @@ const nodes = {
      */
     changeTo(from, to, time, callback) {
       this.tweens = this.tweens || [];
-
       const { length } = arguments;
-      if (typeof length <= 2 || (length === 3 && time === 'function')) {
+      if (length <= 2 || (length === 3 && typeof time === 'function')) {
         callback = time;
         time = to;
         to = from;
@@ -68,9 +126,6 @@ const nodes = {
       return changing;
     },
     // 删除过程参数 可被更改与自定义
-    removing(callback) {
-      return callback();
-    },
     remove(easing, cb) {
       if (this._removing) return null;
       this._removing = true;
@@ -113,20 +168,6 @@ const nodes = {
       texture: false,
       baseTexture: false,
     },
-  },
-  update() {
-    const node = this.activeNodes;
-    if (node.length === 0) return;
-    let temp;
-    for (let i = 0; i < node.length; i++) {
-      temp = node[i];
-      if (temp._destroyed) {
-        node.splice(i, 1);
-        i -= 1;
-      } else if (temp.parent !== null) {
-        temp._update();
-      }
-    }
   },
   /**
    * 注册一个类型， obj为该类型执行的参数
@@ -185,7 +226,7 @@ const nodes = {
     // 添加update 如果 有
     if (typeof update === 'function') {
       node._update = update;
-      this.activeNodes.push(node);
+      if (!options.added) this.activeNodes.push(node);
     }
     if (typeof event === 'object') {
       node.interactive = true;
@@ -211,13 +252,16 @@ const nodes = {
     } else node = new this.Renders[typeData.Render]();
 
     if ((typeData.init && typeData.init.call(node, options))) return node;
-    if (!(options instanceof Object) || options.disable) return node;
+    if (typeof typeData.update === 'function') {
+      node._update = typeData.update;
+      this.activeNodes.push(node);
+      options.added = true;
+    }
+    if (options.disable) return node;
     // destroy 参数
     // 如果有更新加入更新队列  加入不到原型里  分解开来？ 多个原型？
     // update 是 一组 还是 一个  加入到原型 ？
-    if (typeof typeData.update === 'function') {
-      options.update = typeData.update;
-    }
+    // TODO:
 
     // init 是对node的处理  以下为默认处理  如果有handle的话则只执行handle
     // node 的 update ？ 如果有update 则在node的active node里加入
@@ -233,8 +277,33 @@ const nodes = {
 // 在加入的时候就生成了一个该节点的proto，在show的时候new 一个
 // 加入一种节点类型   提供一些参数，输入参数即可生成一个不一样的节点
 // 注册节点类型
-nodes.registerRender(['Sprite', 'Text', 'AnimatedSprite', 'Graphics',
+nodes.registerRender(['Sprite', 'Text', 'Graphics',
   'TilingSprite']);
+nodes.registerRender('AnimatedSprite', $.AnimatedSprite, {
+  updateOneFrame() {
+    const previousFrame = this.currentFrame;
+    this._currentTime += 1;
+    if (this._currentTime >= this._textures.length && !this.loop) {
+      this._currentTime = this._textures.length - 1;
+      this.stop();
+      if (this.onComplete) {
+        this.onComplete();
+      }
+    } else {
+      if (this.loop && this.onLoop) {
+        if (this.animationSpeed > 0 && this.currentFrame < previousFrame) {
+          this.onLoop();
+        } else if (this.animationSpeed < 0 && this.currentFrame > previousFrame) {
+          this.onLoop();
+        }
+      }
+      this.updateTexture();
+    }
+  },
+});
+// 重写animateSprite的更新，不使用ticker
+// 由于基本大多数block的animate时间一致，因此使用一个ticker来更新
+
 /* proto       ： 最基本原型链
 protoFunc   ： 放入原型链的方法
 最终生成函数的原型链 由proto protoFunc default（node的默认方法） 三部分的方法构成
@@ -272,35 +341,25 @@ nodes.register('text', {
   },
 });
 nodes.register('sprite', {
-  Render(Renders, { texture }) {
-    if (texture instanceof Array) return new Renders.AnimatedSprite(texture);
-    return new Renders.Sprite(texture);
-  },
-  init({
+  Render(Renders, {
+    animate,
     texture,
     time,
   }) {
     if (texture instanceof Array) {
       time = time || 500;
-      this.animationSpeed = 1000 / time / 60;
-      this.play();
+      let node;
+      if (animate) {
+        node = new Renders.AnimatedSprite(texture);
+        node.animationSpeed = 1000 / time / 60;
+      } else {
+        node = new Renders.AnimatedSprite(texture, false);
+        nodes.addAnimation(Math.ceil((60 * time) / 1000), node);
+      }
+      node.play();
+      return node;
     }
-  },
-});
-nodes.register('block', {
-  Render(Renders, options) {
-    return nodes.getNode('sprite', { disable: true });
-  },
-  init({
-    x,
-    y,
-    w,
-    h,
-  }) {
-    this.position.set(x, y);
-    if (w && this.width !== w) this.width = w;
-    if (h && this.height !== h) this.height = h;
-    return true;
+    return new Renders.Sprite(texture);
   },
 });
 // 注册一个节点渲染器

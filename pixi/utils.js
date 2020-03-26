@@ -7,6 +7,35 @@ const utils = {
     down: { x: 0, y: 1 },
     right: { x: 1, y: 0 },
   },
+  /**
+   * 实现的一个filter， 直接改变源数组，(怕filter生成新数组影响原数组回收,或带来回收成本)
+   * 也不知道到底有没有什么好处，先这样= =
+   * @param {array} arr 
+   * @param {function} func 
+   */
+  filter(arr, func) {
+    let keep = false;
+    let start = 0;
+    let deleteCount = 0;
+    const len = arr.length;
+    for (let i = 0; i < len - deleteCount; i++) {
+      if (func(arr[i], deleteCount + i)) {
+        if (keep) {
+          keep = !keep;
+          arr.splice(start, i - start);
+          deleteCount += i - start;
+          i = start;
+        }
+      } else if (!keep) {
+        start = i;
+        keep = !keep;
+      }
+    }
+    if (keep) {
+      arr.splice(start, arr.length - start);
+    }
+    return arr;
+  },
   clamp(x, a, b) {
     const min = Math.min(a, b); const max = Math.max(a, b);
     return Math.min(Math.max(x || 0, min), max);

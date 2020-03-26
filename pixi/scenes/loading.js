@@ -16,11 +16,6 @@ loading.on('show', function (loader) {
     },
     start() {
       ui.setLoc(this, 0.5, 0.5, 0.5, 0.5);
-      this.removing = (cb) => {
-        this.changeTo({
-          alpha: 0,
-        }, 500, cb);
-      };
     },
   });
   this.addNode('graphics', {

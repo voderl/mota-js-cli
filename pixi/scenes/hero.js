@@ -37,7 +37,9 @@ const hero = {
       init() {
         this.getTween({
           alpha: 0,
-        }, 500, () => { this.remove(); }).delay(800).start();
+        }, 500)
+          .onComplete(() => { this.remove(); })
+          .delay(800).start();
       },
     });
   },
@@ -136,7 +138,7 @@ const hero = {
       x: x + dx * 32,
       y: y + dy * 32,
     }, time, () => {
-      if (callback instanceof Function) callback();
+      if (typeof callback === 'function') callback();
       this.playing = false;
       if (this._dirty) {
         this._dirty = false;

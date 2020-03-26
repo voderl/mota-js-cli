@@ -38,6 +38,48 @@ const time = (func, times = 1000000) => {
   }
   console.timeEnd(name);
 };
+
+const a = {};
+Object.defineProperty(a, 'value', {
+  configurable: true,
+  get() {
+    console.log(1);
+    const value = 2;
+    Object.defineProperty(a, 'value', {
+      value,
+    });
+    return value;
+  },
+});
+const setLazyValue = (obj, prop, func) => {
+  if (typeof func !== 'function') console.log(`func需为function类型`);
+  Object.defineProperty(obj, prop, {
+    configurable: true,
+    get () {
+      const value = func();
+      Object.defineProperty(this, prop, {
+        value,
+        writable: true,
+      });
+      return value;
+    },
+  });
+};
+var a = {};
+setValue(a, 'value', () => {console.log('d'); return 2})
+class c {
+  get value() {
+    window.args = arguments;
+    console.log(this, arguments);
+    const value = 2;
+    Object.defineProperty(this, 'value', {
+      value,
+    });
+    return value;
+  }
+}
+const d = new c();
+console.log(d.value, d.value);
 // import Dexie from 'dexie';
 
 // /**
